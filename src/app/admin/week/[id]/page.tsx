@@ -75,8 +75,21 @@ export default async function WeekEntryPage({
               key={group.teamId}
               className="overflow-hidden rounded-2xl border border-white/10"
             >
-              <div className="bg-white/5 px-4 py-2.5 text-sm font-semibold">
-                {group.teamName}
+              <div className="flex flex-wrap items-center justify-between gap-2 bg-white/5 px-4 py-2.5">
+                <span className="text-sm font-semibold">{group.teamName}</span>
+                <label className="flex items-center gap-2 text-xs text-slate-400">
+                  Team points
+                  <input type="hidden" name="teamId" value={group.teamId} />
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step={0.5}
+                    min={0}
+                    name={`teampts_${group.teamId}`}
+                    defaultValue={week.teamPoints[group.teamId] ?? ""}
+                    className="w-20 rounded-lg border border-white/10 bg-dusk-950 px-2 py-1 text-white outline-none focus:border-sunset-400"
+                  />
+                </label>
               </div>
               <div className="scroll-x">
                 <table className="w-full text-sm">

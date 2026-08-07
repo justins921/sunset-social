@@ -9,7 +9,12 @@ import {
   isAuthed,
   adminConfigured,
 } from "@/lib/auth";
-import { saveWeekResults, saveRecap, type ResultInput } from "@/lib/queries";
+import {
+  saveWeekResults,
+  saveRecap,
+  saveTeamPoints,
+  type ResultInput,
+} from "@/lib/queries";
 
 export async function loginAction(formData: FormData) {
   if (!adminConfigured()) redirect("/admin/login?e=unconfigured");
@@ -51,6 +56,13 @@ export async function saveWeekAction(formData: FormData) {
   });
 
   await saveWeekResults(weekId, entries);
+
+  const teamIds = formData.getAll("teamId").map((v) => Number(v));
+  const teamPoints = teamIds.map((tid) => ({
+    teamId: tid,
+    points: parseNumber(formData.get(`teampts_${tid}`)),
+  }));
+  await saveTeamPoints(weekId, teamPoints);
 
   const low = String(formData.get("lowScores") ?? "").trim() || null;
   const fifty = String(formData.get("fiftyFifty") ?? "").trim() || null;

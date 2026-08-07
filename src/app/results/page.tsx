@@ -56,6 +56,25 @@ function WeekCard({
         )}
       </div>
 
+      {week.teamPoints.some((tp) => tp.points > 0) && (
+        <div className="flex flex-wrap gap-1.5 border-b border-white/10 px-5 py-3">
+          {week.teamPoints
+            .filter((tp) => tp.points > 0)
+            .map((tp) => (
+            <span
+              key={tp.teamId}
+              className="rounded-md bg-white/5 px-2 py-1 text-xs text-slate-300"
+              title={`${tp.teamName} team points`}
+            >
+              {tp.teamName}
+              <span className="ml-1.5 font-mono font-semibold text-sunset-200">
+                {tp.points.toFixed(1)}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
+
       {played.length > 0 ? (
         <div className="scroll-x">
           <table className="w-full text-sm">

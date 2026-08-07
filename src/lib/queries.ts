@@ -7,7 +7,8 @@ import {
   type RankedTeam,
   type RankedPlayer,
 } from "@/lib/standings";
-import { TEAMS, SCHEDULE, RECAPS } from "@/data/league";
+import { TEAMS, type Player } from "@/data/league";
+import { SEASON_2026 } from "@/data/season2026";
 
 // ---------------------------------------------------------------------------
 // Standings (DB-first, static fallback)
@@ -23,10 +24,9 @@ export async function getTeamStandings(): Promise<RankedTeam[]> {
       { id: number; name: string; total: number }[]
     >`
       select t.id, t.name,
-             (t.baseline_points + coalesce(sum(r.points), 0))::float8 as total
+             (t.baseline_points + coalesce(sum(tr.points), 0))::float8 as total
       from teams t
-      join players p on p.team_id = t.id
-      left join results r on r.player_id = p.id
+      left join team_results tr on tr.team_id = t.id
       group by t.id, t.name, t.baseline_points
       order by total desc, t.id asc`;
 
@@ -88,6 +88,8 @@ export type ResultRow = {
   status: string;
 };
 
+export type TeamPointRow = { teamId: number; teamName: string; points: number };
+
 export type WeekResults = {
   id: number;
   label: string;
@@ -96,6 +98,7 @@ export type WeekResults = {
   lowScores: string | null;
   fiftyFifty: string | null;
   rows: ResultRow[];
+  teamPoints: TeamPointRow[];
 };
 
 /** Weeks that have entered scores or a recap, most recent first. */
@@ -159,6 +162,20 @@ export async function getResultsWeeks(): Promise<WeekResults[]> {
       byWeek.set(r.week_id, list);
     }
 
+    const teamRows = await sql<
+      { week_id: number; team_id: number; team_name: string; points: number }[]
+    >`
+      select tr.week_id, tr.team_id, t.name as team_name, tr.points::float8 as points
+      from team_results tr
+      join teams t on t.id = tr.team_id
+      order by tr.points desc nulls last, tr.team_id asc`;
+    const teamByWeek = new Map<number, TeamPointRow[]>();
+    for (const tr of teamRows) {
+      const list = teamByWeek.get(tr.week_id) ?? [];
+      list.push({ teamId: tr.team_id, teamName: tr.team_name, points: tr.points });
+      teamByWeek.set(tr.week_id, list);
+    }
+
     return weeks.map((w) => ({
       id: w.id,
       label: w.label,
@@ -167,6 +184,7 @@ export async function getResultsWeeks(): Promise<WeekResults[]> {
       lowScores: w.low_scores,
       fiftyFifty: w.fifty_fifty,
       rows: byWeek.get(w.id) ?? [],
+      teamPoints: teamByWeek.get(w.id) ?? [],
     }));
   } catch (e) {
     console.error("getResultsWeeks failed, using static data:", e);
@@ -174,19 +192,43 @@ export async function getResultsWeeks(): Promise<WeekResults[]> {
   }
 }
 
-// Fallback: show the static recaps (no per-player scores available without a DB).
+// Fallback: render the full validated season directly from the seed file when
+// no database is connected, so /results still shows real scorecards.
 function staticResultsWeeks(): WeekResults[] {
-  return RECAPS.map((r) => {
-    const idx = SCHEDULE.findIndex((w) => w.label === r.label);
-    const w = idx >= 0 ? SCHEDULE[idx] : undefined;
+  const teamName = new Map(TEAMS.map((t) => [t.id, t.name]));
+  const slotName = (team: number, slot: number) =>
+    TEAMS.find((t) => t.id === team)?.players.find(
+      (p) => p.slot === (["A", "B", "C", "D"][slot - 1] as Player["slot"]),
+    )?.name ?? `${team}.${slot}`;
+
+  return SEASON_2026.map((wk, i) => {
+    const rows: ResultRow[] = wk.results
+      .map((r) => ({
+        playerId: r.team * 10 + r.slot,
+        name: slotName(r.team, r.slot),
+        teamName: teamName.get(r.team) ?? `Team ${r.team}`,
+        slot: ["A", "B", "C", "D"][r.slot - 1],
+        strokes: r.strokes,
+        points: r.points,
+        status: "played",
+      }))
+      .sort((a, b) => (b.points ?? 0) - (a.points ?? 0));
+    const teamPoints: TeamPointRow[] = Object.entries(wk.teamPoints)
+      .map(([id, pts]) => ({
+        teamId: Number(id),
+        teamName: teamName.get(Number(id)) ?? `Team ${id}`,
+        points: pts,
+      }))
+      .sort((a, b) => b.points - a.points);
     return {
-      id: idx + 1,
-      label: r.label,
-      playDate: w?.date ?? null,
-      note: w?.note ?? null,
-      lowScores: r.lowScores ?? null,
-      fiftyFifty: r.fiftyFifty ?? null,
-      rows: [],
+      id: i + 1,
+      label: wk.label,
+      playDate: wk.date,
+      note: null,
+      lowScores: wk.lowScores,
+      fiftyFifty: wk.fiftyFifty,
+      rows,
+      teamPoints,
     };
   }).reverse();
 }
@@ -257,6 +299,7 @@ export type WeekEntry = {
   lowScores: string | null;
   fiftyFifty: string | null;
   players: EntryPlayer[];
+  teamPoints: Record<number, number | null>;
 };
 
 export async function getWeekEntry(id: number): Promise<WeekEntry | null> {
@@ -303,6 +346,11 @@ export async function getWeekEntry(id: number): Promise<WeekEntry | null> {
     left join results r on r.player_id = p.id and r.week_id = ${id}
     order by p.team_id asc, p.sort asc`;
 
+  const teamPts = await sql<{ team_id: number; points: number | null }[]>`
+    select team_id, points::float8 as points from team_results where week_id = ${id}`;
+  const teamPoints: Record<number, number | null> = {};
+  for (const tp of teamPts) teamPoints[tp.team_id] = tp.points;
+
   return {
     id: w.id,
     label: w.label,
@@ -311,6 +359,7 @@ export async function getWeekEntry(id: number): Promise<WeekEntry | null> {
     entryOpen: w.entry_open,
     lowScores: w.low_scores,
     fiftyFifty: w.fifty_fifty,
+    teamPoints,
     players: players.map((p) => ({
       playerId: p.player_id,
       teamId: p.team_id,
@@ -381,4 +430,26 @@ export async function saveRecap(
     on conflict (week_id) do update
       set low_scores = excluded.low_scores,
           fifty_fifty = excluded.fifty_fifty`;
+}
+
+export async function saveTeamPoints(
+  weekIdValue: number,
+  points: { teamId: number; points: number | null }[],
+): Promise<void> {
+  const sql = getSql();
+  if (!sql) throw new Error("No database configured");
+  await ensureSchema();
+  await sql.begin(async (tx) => {
+    for (const tp of points) {
+      if (tp.points === null) {
+        await tx`delete from team_results
+                 where week_id = ${weekIdValue} and team_id = ${tp.teamId}`;
+        continue;
+      }
+      await tx`
+        insert into team_results (week_id, team_id, points)
+        values (${weekIdValue}, ${tp.teamId}, ${tp.points})
+        on conflict (week_id, team_id) do update set points = excluded.points`;
+    }
+  });
 }

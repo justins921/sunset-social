@@ -49,32 +49,51 @@ no code changes:
 
 1. Go to `/admin` and sign in.
 2. Pick the week.
-3. Enter each golfer's 9-hole **strokes** and **points**, set any Sub / Absent /
-   Forfeit / Rainout statuses, and fill in the night's **low score** and **50/50
-   winner**.
+3. Enter each golfer's 9-hole **strokes** and **points**, the **team points**
+   per team, set any Sub / Absent / Forfeit / Rainout statuses, and fill in the
+   night's **low score** and **50/50 winner**.
 4. **Save week.** The public [standings](/standings), [results](/results), home,
    and [teams](/teams) pages update immediately.
 
 Points entered for a week **add** to the season totals.
 
-### About the 2026 baseline
+### The 2026 season is pre-loaded
 
-The season-to-date totals through **Aug 6, 2026** (Team 4 leading at 240.0, etc.)
-are seeded from the results sheet and marked as "baseline" weeks. Enter the
-weeks *after* Aug 6 going forward — their points add on top. For a brand-new
-season, reset the baseline numbers to `0` in `src/data/league.ts` (see below)
-and enter every week from scratch.
+Every league night from **May 7 through Aug 6, 2026** is already in the database,
+reconstructed from the weekly results PDFs in `src/data/season2026.ts`:
+
+- Per-player 9-hole **strokes** and **points** for all 40 golfers.
+- Per-team **points** for each night.
+- Each night's low score and 50/50 winner.
+
+Standings are the running **sum of every week's points**, and they reproduce the
+official totals exactly (Team 4 at 240.0, Jeff Scanlan at 69.5, etc.). Just enter
+each new night from Aug 13 onward. For a brand-new season, clear
+`src/data/season2026.ts` (set it to `[]`) so the season starts empty.
+
+Every value in `season2026.ts` was validated on import: each player's weekly
+strokes sum to their printed stroke total, and the weekly team and individual
+points sum exactly to the official season totals.
+
+### Team points vs. individual points
+
+A team's official total is **not** the sum of its four players' individual
+points — under Rule 9, absent players still earn points for their team. So team
+standings have their own points series. In the admin form you enter a **Team
+points** value per team for the night, alongside each golfer's strokes and
+points.
 
 ## Editing league content in code
 
 Rosters, schedule, rules, and bylaws live in plain data files. Editing them and
-pushing redeploys the site. (Team/player `points` here are the **baseline**
-totals used to seed the database the first time; after that, weekly scores come
-from `/admin`.)
+pushing redeploys the site. (Team/player `points` in `league.ts` are only the
+no-database **fallback** totals; when a database is connected, all points come
+from the weekly results.)
 
 | What to change | File |
 | --- | --- |
-| Team rosters, phone numbers, baseline points | `src/data/league.ts` → `TEAMS` |
+| The pre-loaded 2026 weekly scores | `src/data/season2026.ts` → `SEASON_2026` |
+| Team rosters, phone numbers, fallback points | `src/data/league.ts` → `TEAMS` |
 | Substitutes | `src/data/league.ts` → `SUBS` |
 | Weekly schedule & match-ups | `src/data/league.ts` → `SCHEDULE` |
 | "As of" dates and contact info | `src/data/league.ts` → `LEAGUE` |
@@ -99,8 +118,9 @@ from `/admin`.)
   public site never breaks if the DB is briefly unavailable.
 - `src/lib/auth.ts` — minimal single-password admin auth via a signed,
   httpOnly cookie (HMAC-SHA256, constant-time compare). No user table.
-- Standings are recomputed from the database as `baseline + Σ(weekly points)`
-  for both teams and individuals.
+- Standings are recomputed from the database as the sum of weekly points —
+  team standings from the per-team series, individual standings from the
+  per-player series (the two differ by absent-fill team points, per Rule 9).
 
 ## Seeded data provenance
 

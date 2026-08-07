@@ -105,11 +105,13 @@ export default async function AdminDashboard() {
 
           <div className="mt-6 rounded-xl border border-white/10 bg-dusk-800/40 p-4 text-xs text-slate-400">
             <p>
-              <span className="font-semibold text-slate-300">Baseline weeks</span>{" "}
-              (through {LEAGUE.standingsAsOf}) are already summed into the season
-              totals from the 2026 results sheet. Enter new weeks going forward —
-              their points add on top. For a fresh season, reset the baseline in{" "}
-              <code className="rounded bg-white/10 px-1">src/data/league.ts</code>.
+              Standings are the running sum of every week&apos;s points. Weeks
+              through {LEAGUE.standingsAsOf} are pre-loaded from the 2026 results
+              sheets; just enter each new night going forward.{" "}
+              <span className="font-semibold text-slate-300">Team points</span>{" "}
+              are entered per team (they aren&apos;t the sum of the four players —
+              absent players still earn team points), alongside each golfer&apos;s
+              strokes and points.
             </p>
           </div>
         </>
