@@ -133,42 +133,58 @@ async function doEnsure(): Promise<void> {
       primary key (week_id, team_id)
     )`;
 
-  const [{ count }] = await sql<{ count: number }[]>`
-    select count(*)::int as count from teams`;
-  if (count > 0) return; // already seeded
+  // Keep the reference data in sync with code on every deploy. Baselines are
+  // forced to 0 — the model is the pure sum of weekly points — which also
+  // migrates any rows an earlier (baseline-model) deploy seeded with non-zero
+  // totals.
+  await seedBase(sql);
 
-  await seed(sql);
+  // Load the full validated season only when no per-player results exist yet.
+  // This runs on a fresh database AND on one an earlier deploy had already
+  // created tables in without loading the season. Once any results are present
+  // (season loaded, or the secretary has entered a week) it never re-runs, so
+  // entered data is never clobbered.
+  const [{ count }] = await sql<{ count: number }[]>`
+    select count(*)::int as count from results`;
+  if (count === 0) await loadSeason(sql);
 }
 
-async function seed(sql: Sql): Promise<void> {
+async function seedBase(sql: Sql): Promise<void> {
   await sql.begin(async (tx) => {
-    // Teams & players. Baselines are 0 — standings are the pure sum of the
-    // weekly results loaded below and entered going forward.
     for (let ti = 0; ti < TEAMS.length; ti++) {
       const t = TEAMS[ti];
       await tx`
         insert into teams (id, name, sort, baseline_points)
         values (${t.id}, ${t.name}, ${ti}, 0)
-        on conflict (id) do nothing`;
+        on conflict (id) do update
+          set name = excluded.name, sort = excluded.sort, baseline_points = 0`;
       for (let pi = 0; pi < t.players.length; pi++) {
         const p = t.players[pi];
         await tx`
           insert into players (id, team_id, slot, name, phone, sort, baseline_points)
           values (${playerId(t.id, p.slot)}, ${t.id}, ${p.slot}, ${p.name},
                   ${p.phone ?? null}, ${pi}, 0)
-          on conflict (id) do nothing`;
+          on conflict (id) do update
+            set team_id = excluded.team_id, slot = excluded.slot,
+                name = excluded.name, phone = excluded.phone,
+                sort = excluded.sort, baseline_points = 0`;
       }
     }
 
-    // All schedule weeks are open for entry.
     for (let wi = 0; wi < SCHEDULE.length; wi++) {
       const w = SCHEDULE[wi];
       await tx`
         insert into weeks (id, play_date, label, note, sort, entry_open)
         values (${weekId(wi)}, ${w.date}, ${w.label}, ${w.note ?? null}, ${wi}, true)
-        on conflict (id) do nothing`;
+        on conflict (id) do update
+          set play_date = excluded.play_date, label = excluded.label,
+              note = excluded.note, sort = excluded.sort, entry_open = true`;
     }
+  });
+}
 
+async function loadSeason(sql: Sql): Promise<void> {
+  await sql.begin(async (tx) => {
     // Load the full validated 2026 season: per-player strokes & points,
     // per-team points, and the night's recap.
     for (const wk of SEASON_2026) {
