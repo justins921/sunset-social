@@ -2,13 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { LEAGUE, TEAMS, SUBS } from "@/data/league";
-import { teamStandings, ordinal } from "@/lib/standings";
+import { ordinal } from "@/lib/standings";
+import { getTeamStandings, getIndividualStandings } from "@/lib/queries";
 
 export const metadata: Metadata = { title: "Teams" };
+export const dynamic = "force-dynamic";
 
-export default function TeamsPage() {
-  const ranked = teamStandings();
+export default async function TeamsPage() {
+  const [ranked, individuals] = await Promise.all([
+    getTeamStandings(),
+    getIndividualStandings(),
+  ]);
   const placeById = new Map(ranked.map((t) => [t.id, t.place]));
+  const pointsById = new Map(ranked.map((t) => [t.id, t.points]));
+  const playerPoints = new Map(
+    individuals.map((p) => [`${p.teamId}-${p.name}`, p.points ?? 0]),
+  );
   // Display teams in numeric order for easy roster lookup.
   const teams = [...TEAMS].sort((a, b) => a.id - b.id);
 
@@ -35,7 +44,7 @@ export default function TeamsPage() {
                     {placeById.get(t.id) ? `${ordinal(placeById.get(t.id)!)} place` : ""}
                   </span>
                   <span className="font-mono font-semibold text-sunset-200">
-                    {t.points.toFixed(1)} pts
+                    {(pointsById.get(t.id) ?? t.points).toFixed(1)} pts
                   </span>
                 </div>
               </div>
@@ -58,7 +67,7 @@ export default function TeamsPage() {
                         </a>
                       )}
                       <span className="font-mono text-sm text-slate-300">
-                        {(p.points ?? 0).toFixed(1)}
+                        {(playerPoints.get(`${t.id}-${p.name}`) ?? p.points ?? 0).toFixed(1)}
                       </span>
                     </span>
                   </li>

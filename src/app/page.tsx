@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { LEAGUE, SCHEDULE, RECAPS, TEAMS, SUBS } from "@/data/league";
-import { teamStandings, individualStandings } from "@/lib/standings";
+import { getTeamStandings, getIndividualStandings } from "@/lib/queries";
+
+export const dynamic = "force-dynamic";
 
 function nextWeek() {
   const today = new Date();
@@ -9,10 +11,10 @@ function nextWeek() {
   return upcoming ?? SCHEDULE[SCHEDULE.length - 1];
 }
 
-export default function HomePage() {
-  const teams = teamStandings();
+export default async function HomePage() {
+  const teams = await getTeamStandings();
   const leader = teams[0];
-  const topPlayers = individualStandings().slice(0, 5);
+  const topPlayers = (await getIndividualStandings()).slice(0, 5);
   const week = nextWeek();
   const latestRecap = RECAPS[RECAPS.length - 1];
   const playerCount = TEAMS.reduce((n, t) => n + t.players.length, 0);

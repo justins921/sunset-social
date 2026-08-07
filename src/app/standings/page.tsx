@@ -2,13 +2,14 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { LEAGUE } from "@/data/league";
-import { teamStandings, individualStandings } from "@/lib/standings";
+import { getTeamStandings, getIndividualStandings } from "@/lib/queries";
 
 export const metadata: Metadata = { title: "Standings" };
+export const dynamic = "force-dynamic";
 
-export default function StandingsPage() {
-  const teams = teamStandings();
-  const players = individualStandings();
+export default async function StandingsPage() {
+  const teams = await getTeamStandings();
+  const players = await getIndividualStandings();
   const maxTeam = teams[0].points;
 
   return (
