@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { LEAGUE, SCHEDULE, RECAPS, TEAMS, SUBS } from "@/data/league";
-import { getTeamStandings, getIndividualStandings } from "@/lib/queries";
+import { LEAGUE, SCHEDULE, RECAPS } from "@/data/league";
+import { getTeamStandings, getIndividualStandings, getRoster } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -12,12 +12,17 @@ function nextWeek() {
 }
 
 export default async function HomePage() {
-  const teams = await getTeamStandings();
+  const [teams, topAll, roster] = await Promise.all([
+    getTeamStandings(),
+    getIndividualStandings(),
+    getRoster(),
+  ]);
   const leader = teams[0];
-  const topPlayers = (await getIndividualStandings()).slice(0, 5);
+  const topPlayers = topAll.slice(0, 5);
   const week = nextWeek();
   const latestRecap = RECAPS[RECAPS.length - 1];
-  const playerCount = TEAMS.reduce((n, t) => n + t.players.length, 0);
+  const playerCount = roster.teams.reduce((n, t) => n + t.players.length, 0);
+  const SUBS = roster.subs;
 
   return (
     <div>
@@ -33,7 +38,7 @@ export default async function HomePage() {
             {LEAGUE.name}
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-sunset-50/90">
-            {LEAGUE.season} season · {TEAMS.length} teams · {playerCount} golfers ·
+            {LEAGUE.season} season · {teams.length} teams · {playerCount} golfers ·
             9-hole match play every {LEAGUE.playDay}, {LEAGUE.teeTimes}.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">

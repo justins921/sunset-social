@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
-import { LEAGUE, SCHEDULE, FUN_NIGHTS } from "@/data/league";
+import { LEAGUE, FUN_NIGHTS } from "@/data/league";
+import { getSchedule } from "@/lib/queries";
 
 export const metadata: Metadata = { title: "Schedule" };
+export const dynamic = "force-dynamic";
 
-function isPast(dateISO: string) {
+function isPast(dateISO: string | null) {
+  if (!dateISO) return false;
   const d = new Date(dateISO + "T23:59:59");
   return d < new Date();
 }
 
-export default function SchedulePage() {
+export default async function SchedulePage() {
+  const SCHEDULE = await getSchedule();
   const nextIdx = SCHEDULE.findIndex((w) => !isPast(w.date));
 
   return (
@@ -26,7 +30,7 @@ export default function SchedulePage() {
             const past = isPast(w.date);
             const isNext = i === nextIdx;
             return (
-              <li key={w.date} className="relative">
+              <li key={w.id} className="relative">
                 <span
                   className={`absolute -left-[27px] top-3 h-3 w-3 rounded-full border-2 ${
                     isNext
@@ -53,7 +57,7 @@ export default function SchedulePage() {
                         </span>
                       )}
                     </span>
-                    {w.matchups && (
+                    {w.matchups.length > 0 && (
                       <span className="text-xs text-slate-500">
                         {w.matchups.length} match{w.matchups.length === 1 ? "" : "es"}
                       </span>
@@ -62,7 +66,7 @@ export default function SchedulePage() {
                   {w.note && (
                     <p className="mt-1 text-sm font-medium text-sunset-200">{w.note}</p>
                   )}
-                  {w.matchups && (
+                  {w.matchups.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {w.matchups.map((m) => (
                         <span

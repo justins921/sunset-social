@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
-import { LEAGUE, TEAMS, SUBS } from "@/data/league";
+import { LEAGUE } from "@/data/league";
 import { ordinal } from "@/lib/standings";
-import { getTeamStandings, getIndividualStandings } from "@/lib/queries";
+import { getTeamStandings, getIndividualStandings, getRoster } from "@/lib/queries";
 
 export const metadata: Metadata = { title: "Teams" };
 export const dynamic = "force-dynamic";
 
 export default async function TeamsPage() {
-  const [ranked, individuals] = await Promise.all([
+  const [ranked, individuals, roster] = await Promise.all([
     getTeamStandings(),
     getIndividualStandings(),
+    getRoster(),
   ]);
   const placeById = new Map(ranked.map((t) => [t.id, t.place]));
   const pointsById = new Map(ranked.map((t) => [t.id, t.points]));
@@ -22,14 +23,15 @@ export default async function TeamsPage() {
     individuals.map((p) => [`${p.teamId}-${p.name}`, p.handicap]),
   );
   // Display teams in numeric order for easy roster lookup.
-  const teams = [...TEAMS].sort((a, b) => a.id - b.id);
+  const teams = [...roster.teams].sort((a, b) => a.id - b.id);
+  const SUBS = roster.subs;
 
   return (
     <div>
       <PageHeader
         eyebrow={`Rosters as of ${LEAGUE.rosterAsOf}`}
         title="Teams"
-        subtitle={`${TEAMS.length} teams of four. Each golfer plays a head-to-head match every week.`}
+        subtitle={`${teams.length} teams of four. Each golfer plays a head-to-head match every week.`}
       />
 
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -47,7 +49,7 @@ export default async function TeamsPage() {
                     {placeById.get(t.id) ? `${ordinal(placeById.get(t.id)!)} place` : ""}
                   </span>
                   <span className="font-mono font-semibold text-sunset-200">
-                    {(pointsById.get(t.id) ?? t.points).toFixed(1)} pts
+                    {(pointsById.get(t.id) ?? 0).toFixed(1)} pts
                   </span>
                 </div>
               </div>
@@ -73,7 +75,7 @@ export default async function TeamsPage() {
                         Hcp {playerHcp.get(`${t.id}-${p.name}`) ?? "—"}
                       </span>
                       <span className="font-mono text-sm text-slate-300">
-                        {(playerPoints.get(`${t.id}-${p.name}`) ?? p.points ?? 0).toFixed(1)}
+                        {(playerPoints.get(`${t.id}-${p.name}`) ?? 0).toFixed(1)}
                       </span>
                     </span>
                   </li>
@@ -110,12 +112,11 @@ export default async function TeamsPage() {
         </div>
 
         <p className="mt-10 text-xs text-slate-500">
-          Something out of date? Rosters and points are edited in{" "}
-          <code className="rounded bg-white/10 px-1">src/data/league.ts</code>. See the{" "}
+          See the{" "}
           <Link href="/standings" className="text-sunset-300 hover:underline">
             standings
           </Link>{" "}
-          for current placement.
+          for current placement. Points and handicaps update as scores are posted.
         </p>
       </div>
     </div>

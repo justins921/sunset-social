@@ -22,7 +22,7 @@ export default async function AdminDashboard() {
           <p className="text-xs font-semibold uppercase tracking-widest text-sunset-300">
             Secretary tools
           </p>
-          <h1 className="text-2xl font-bold tracking-tight">Score entry</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Secretary tools</h1>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/" className="text-sm text-slate-400 hover:text-sunset-300">
@@ -35,6 +35,36 @@ export default async function AdminDashboard() {
           </form>
         </div>
       </div>
+
+      {dbReady && (
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          <Link
+            href="/admin/roster"
+            className="rounded-2xl border border-white/10 bg-dusk-800/40 p-4 hover:border-sunset-500/40"
+          >
+            <p className="font-semibold">Teams &amp; roster</p>
+            <p className="mt-1 text-sm text-slate-400">Set players, subs, new season</p>
+          </Link>
+          <Link
+            href="/admin/schedule"
+            className="rounded-2xl border border-white/10 bg-dusk-800/40 p-4 hover:border-sunset-500/40"
+          >
+            <p className="font-semibold">Schedule</p>
+            <p className="mt-1 text-sm text-slate-400">Weeks, matchups, generator</p>
+          </Link>
+          <Link
+            href="/admin/treasury"
+            className="rounded-2xl border border-white/10 bg-dusk-800/40 p-4 hover:border-sunset-500/40"
+          >
+            <p className="font-semibold">Treasury</p>
+            <p className="mt-1 text-sm text-slate-400">Dues, ledger, balance</p>
+          </Link>
+        </div>
+      )}
+
+      {dbReady && (
+        <h2 className="mt-8 text-lg font-semibold">Weekly score entry</h2>
+      )}
 
       {!dbReady ? (
         <div className="mt-8 rounded-2xl border border-sunset-500/30 bg-sunset-500/10 p-6 text-sm text-slate-200">

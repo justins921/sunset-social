@@ -108,7 +108,19 @@ from the weekly results.)
 - **Schedule** — season timeline with match-ups, fun nights, and the banquet.
 - **Teams** — all rosters with phone numbers, points, and the sub list.
 - **Rules** / **Bylaws** — the league's governing documents.
-- **/admin** — password-gated score entry (not linked in the public nav).
+- **/admin** — password-gated secretary tools (not linked in the public nav):
+  - **Score entry** — weekly strokes/points with auto-calculated team points.
+  - **Teams & roster** (`/admin/roster`) — set players and subs, and "start a new
+    season" (clears scores/dues, keeps the roster & schedule).
+  - **Schedule** (`/admin/schedule`) — edit each week's date/label/note/matchups,
+    or auto-generate a round-robin across the playing weeks.
+  - **Treasury** (`/admin/treasury`) — mark $50 dues paid per member, keep an
+    income/expense ledger, and see the running balance (the post-banquet report).
+
+Once a database is connected and initialized, the **database is the source of
+truth** for rosters and the schedule — admin edits persist across redeploys, and
+the `src/data` files are only the first-time seed. Handicaps (Rule 10) are
+computed from entered strokes and shown on the standings and teams pages.
 
 ## Architecture notes
 
