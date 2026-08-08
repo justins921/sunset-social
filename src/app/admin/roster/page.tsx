@@ -125,30 +125,40 @@ export default async function RosterPage({
       </div>
 
       {/* New season */}
-      <div className="mt-12 rounded-2xl border border-red-500/30 bg-red-500/5 p-5">
-        <h2 className="text-lg font-semibold text-red-200">Start a new season</h2>
+      <div className="mt-12 rounded-2xl border border-sunset-500/30 bg-sunset-500/5 p-5">
+        <h2 className="text-lg font-semibold text-sunset-200">Start a new season</h2>
         <p className="mt-1 text-sm text-slate-400">
-          Clears all weekly scores, team points, recaps, dues and treasury entries.
-          The roster and schedule are kept so you can edit them for the new year.
-          This cannot be undone.
+          First the entire current season — roster, schedule, scores, team points,
+          recaps, dues, ledger and minutes, plus the final standings — is saved to
+          the{" "}
+          <Link href="/admin/seasons" className="text-sunset-300 hover:underline">
+            season archive
+          </Link>
+          . Then those are cleared for the new year (the roster and schedule stay so
+          you can re-draft and re-generate).
         </p>
         {searchParams.reset === "done" && (
           <p className="mt-3 rounded-lg border border-fairway-500/40 bg-fairway-500/10 px-4 py-2.5 text-sm text-fairway-400">
-            Season cleared. The roster and schedule were kept.
+            Previous season archived and cleared. The roster and schedule were kept.
           </p>
         )}
         <form action={startNewSeasonAction} className="mt-4 flex flex-wrap items-center gap-2">
           <input
-            name="confirm"
-            placeholder='Type RESET to confirm'
-            className={`${input} w-56`}
+            name="label"
+            placeholder="Season to archive (e.g. 2026)"
+            className={`${input} w-52`}
           />
-          <button className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 hover:bg-red-500/20">
-            Clear season
+          <input
+            name="confirm"
+            placeholder="Type RESET to confirm"
+            className={`${input} w-44`}
+          />
+          <button className="rounded-lg border border-sunset-500/40 bg-sunset-500/10 px-4 py-2 text-sm font-semibold text-sunset-200 hover:bg-sunset-500/20">
+            Archive &amp; start new season
           </button>
         </form>
         {searchParams.reset === "confirm" && (
-          <p className="mt-2 text-xs text-red-300">
+          <p className="mt-2 text-xs text-sunset-300">
             Type the word RESET in the box to confirm.
           </p>
         )}

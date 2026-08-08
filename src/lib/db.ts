@@ -157,6 +157,29 @@ async function doEnsure(): Promise<void> {
       amount numeric not null,
       kind text not null default 'expense'
     )`;
+  await sql`
+    create table if not exists meetings (
+      id serial primary key,
+      meeting_date date,
+      title text not null default 'League meeting',
+      notes text,
+      created_at timestamptz not null default now()
+    )`;
+  await sql`
+    create table if not exists meeting_attendance (
+      meeting_id int not null references meetings(id) on delete cascade,
+      player_id int not null references players(id) on delete cascade,
+      primary key (meeting_id, player_id)
+    )`;
+  // Full point-in-time snapshots of past seasons, saved before a reset.
+  await sql`
+    create table if not exists seasons (
+      id serial primary key,
+      label text not null,
+      archived_on date not null default current_date,
+      champion text,
+      data jsonb not null
+    )`;
 
   // Once initialized, the database is the source of truth. Code data is only a
   // first-time seed, so admin edits to rosters/schedule survive every redeploy.

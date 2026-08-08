@@ -734,19 +734,191 @@ export async function generateRoundRobin(): Promise<void> {
   });
 }
 
-/** Start a new season: clear all scoring, recaps, dues and ledger; keep the
- *  roster and schedule so they can be edited for the year ahead. */
-export async function startNewSeason(): Promise<void> {
+/** Snapshot the full current season into the seasons archive (full fidelity),
+ *  so nothing is ever lost on reset. */
+export async function archiveCurrentSeason(label: string): Promise<number> {
   const sql = getSql();
   if (!sql) throw new Error("No database configured");
   await ensureSchema();
+  const [
+    teams,
+    players,
+    weeks,
+    results,
+    teamResults,
+    recaps,
+    dues,
+    transactions,
+    meetings,
+    attendance,
+    standings,
+  ] = await Promise.all([
+    sql`select * from teams order by sort, id`,
+    sql`select * from players order by team_id, sort`,
+    sql`select id, play_date::text as play_date, label, note, sort, matchups from weeks order by sort`,
+    sql`select * from results`,
+    sql`select * from team_results`,
+    sql`select * from recaps`,
+    sql`select player_id, paid, amount, paid_on::text as paid_on from dues`,
+    sql`select id, occurred_on::text as occurred_on, description, amount, kind from transactions`,
+    sql`select id, meeting_date::text as meeting_date, title, notes from meetings order by meeting_date`,
+    sql`select * from meeting_attendance`,
+    getTeamStandings(),
+  ]);
+  const champion = standings[0]?.name ?? null;
+  const data = {
+    teams,
+    players,
+    weeks,
+    results,
+    teamResults,
+    recaps,
+    dues,
+    transactions,
+    meetings,
+    attendance,
+    standings,
+  };
+  const [row] = await sql<{ id: number }[]>`
+    insert into seasons (label, champion, data)
+    values (${label}, ${champion}, ${sql.json(data)})
+    returning id`;
+  return row.id;
+}
+
+/** Start a new season: archive everything first, then clear scoring, recaps,
+ *  dues, ledger and minutes. The roster and schedule are kept for the year
+ *  ahead. */
+export async function startNewSeason(label: string): Promise<void> {
+  const sql = getSql();
+  if (!sql) throw new Error("No database configured");
+  await ensureSchema();
+  await archiveCurrentSeason(label);
   await sql.begin(async (tx) => {
     await tx`delete from results`;
     await tx`delete from team_results`;
     await tx`delete from recaps`;
     await tx`delete from dues`;
     await tx`delete from transactions`;
+    await tx`delete from meetings`; // attendance cascades
   });
+}
+
+export type ArchivedSeason = {
+  id: number;
+  label: string;
+  archivedOn: string;
+  champion: string | null;
+  standings: { id: number; name: string; points: number; place: number }[];
+};
+
+export async function getArchivedSeasons(): Promise<ArchivedSeason[]> {
+  noStore();
+  const sql = getSql();
+  if (!sql) return [];
+  await ensureSchema();
+  const rows = await sql<
+    { id: number; label: string; archived_on: string; champion: string | null; data: { standings?: ArchivedSeason["standings"] } }[]
+  >`select id, label, archived_on::text as archived_on, champion, data
+    from seasons order by archived_on desc, id desc`;
+  return rows.map((r) => ({
+    id: r.id,
+    label: r.label,
+    archivedOn: r.archived_on,
+    champion: r.champion,
+    standings: r.data?.standings ?? [],
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Meeting minutes & attendance
+// ---------------------------------------------------------------------------
+
+export type MeetingSummary = {
+  id: number;
+  date: string | null;
+  title: string;
+  notes: string | null;
+  present: number;
+};
+
+export async function getMeetings(): Promise<MeetingSummary[]> {
+  noStore();
+  const sql = getSql();
+  if (!sql) return [];
+  await ensureSchema();
+  const rows = await sql<
+    { id: number; date: string | null; title: string; notes: string | null; present: number }[]
+  >`
+    select m.id, m.meeting_date::text as date, m.title, m.notes,
+           (select count(*)::int from meeting_attendance a where a.meeting_id = m.id) as present
+    from meetings m
+    order by m.meeting_date desc nulls last, m.id desc`;
+  return rows;
+}
+
+export type MeetingDetail = MeetingSummary & {
+  attendeeIds: number[];
+  roster: RosterTeam[];
+  memberCount: number;
+};
+
+export async function getMeeting(id: number): Promise<MeetingDetail | null> {
+  noStore();
+  const sql = getSql();
+  if (!sql) return null;
+  await ensureSchema();
+  const rows = await sql<
+    { id: number; date: string | null; title: string; notes: string | null }[]
+  >`select id, meeting_date::text as date, title, notes from meetings where id = ${id}`;
+  if (rows.length === 0) return null;
+  const attendees = await sql<{ player_id: number }[]>`
+    select player_id from meeting_attendance where meeting_id = ${id}`;
+  const roster = await getRoster();
+  const memberCount = roster.teams.reduce((n, t) => n + t.players.length, 0);
+  return {
+    ...rows[0],
+    present: attendees.length,
+    attendeeIds: attendees.map((a) => a.player_id),
+    roster: roster.teams,
+    memberCount,
+  };
+}
+
+export async function addMeeting(): Promise<number> {
+  const sql = getSql();
+  if (!sql) throw new Error("No database configured");
+  await ensureSchema();
+  const [row] = await sql<{ id: number }[]>`
+    insert into meetings (meeting_date, title) values (current_date, 'League meeting')
+    returning id`;
+  return row.id;
+}
+
+export async function saveMeeting(
+  id: number,
+  data: { date: string | null; title: string; notes: string | null; attendeeIds: number[] },
+): Promise<void> {
+  const sql = getSql();
+  if (!sql) throw new Error("No database configured");
+  await ensureSchema();
+  await sql.begin(async (tx) => {
+    await tx`update meetings set meeting_date = ${data.date},
+             title = ${data.title || "League meeting"}, notes = ${data.notes}
+             where id = ${id}`;
+    await tx`delete from meeting_attendance where meeting_id = ${id}`;
+    for (const pid of data.attendeeIds) {
+      await tx`insert into meeting_attendance (meeting_id, player_id)
+               values (${id}, ${pid}) on conflict do nothing`;
+    }
+  });
+}
+
+export async function deleteMeeting(id: number): Promise<void> {
+  const sql = getSql();
+  if (!sql) throw new Error("No database configured");
+  await ensureSchema();
+  await sql`delete from meetings where id = ${id}`;
 }
 
 // ---------------------------------------------------------------------------

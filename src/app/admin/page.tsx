@@ -38,27 +38,22 @@ export default async function AdminDashboard() {
 
       {dbReady && (
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Link
-            href="/admin/roster"
-            className="rounded-2xl border border-white/10 bg-dusk-800/40 p-4 hover:border-sunset-500/40"
-          >
-            <p className="font-semibold">Teams &amp; roster</p>
-            <p className="mt-1 text-sm text-slate-400">Set players, subs, new season</p>
-          </Link>
-          <Link
-            href="/admin/schedule"
-            className="rounded-2xl border border-white/10 bg-dusk-800/40 p-4 hover:border-sunset-500/40"
-          >
-            <p className="font-semibold">Schedule</p>
-            <p className="mt-1 text-sm text-slate-400">Weeks, matchups, generator</p>
-          </Link>
-          <Link
-            href="/admin/treasury"
-            className="rounded-2xl border border-white/10 bg-dusk-800/40 p-4 hover:border-sunset-500/40"
-          >
-            <p className="font-semibold">Treasury</p>
-            <p className="mt-1 text-sm text-slate-400">Dues, ledger, balance</p>
-          </Link>
+          {[
+            { href: "/admin/roster", title: "Teams & roster", sub: "Players, subs, new season" },
+            { href: "/admin/schedule", title: "Schedule", sub: "Weeks, matchups, generator" },
+            { href: "/admin/treasury", title: "Treasury", sub: "Dues, ledger, balance" },
+            { href: "/admin/minutes", title: "Minutes", sub: "Meetings & attendance" },
+            { href: "/admin/seasons", title: "Season archive", sub: "Past seasons, saved in full" },
+          ].map((c) => (
+            <Link
+              key={c.href}
+              href={c.href}
+              className="rounded-2xl border border-white/10 bg-dusk-800/40 p-4 hover:border-sunset-500/40"
+            >
+              <p className="font-semibold">{c.title}</p>
+              <p className="mt-1 text-sm text-slate-400">{c.sub}</p>
+            </Link>
+          ))}
         </div>
       )}
 

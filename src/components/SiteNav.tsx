@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/teams", label: "Teams" },
   { href: "/rules", label: "Rules" },
   { href: "/bylaws", label: "Bylaws" },
+  { href: "/minutes", label: "Minutes" },
 ];
 
 export function SiteNav() {

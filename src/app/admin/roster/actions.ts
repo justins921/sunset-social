@@ -75,7 +75,8 @@ export async function startNewSeasonAction(formData: FormData) {
   if (String(formData.get("confirm") ?? "") !== "RESET") {
     redirect("/admin/roster?reset=confirm");
   }
-  await startNewSeason();
+  const label = String(formData.get("label") ?? "").trim() || "Season";
+  await startNewSeason(label);
   refreshPublic();
   redirect("/admin/roster?reset=done");
 }

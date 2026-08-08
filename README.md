@@ -116,6 +116,15 @@ from the weekly results.)
     or auto-generate a round-robin across the playing weeks.
   - **Treasury** (`/admin/treasury`) — mark $50 dues paid per member, keep an
     income/expense ledger, and see the running balance (the post-banquet report).
+  - **Minutes** (`/admin/minutes`) — record each meeting's date, notes, and an
+    attendance checklist with a live quorum indicator (Bylaw 4). Minutes are
+    posted for members on the public `/minutes` page.
+  - **Season archive** (`/admin/seasons`) — every past season, saved in full.
+
+"Start a new season" first **archives the entire current season** (roster,
+schedule, scores, team points, recaps, dues, ledger, minutes, and final
+standings) into the season archive, then clears it for the year ahead — so
+nothing is ever lost.
 
 Once a database is connected and initialized, the **database is the source of
 truth** for rosters and the schedule — admin edits persist across redeploys, and
