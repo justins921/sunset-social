@@ -39,7 +39,7 @@ export function SiteNav() {
           </span>
         </Link>
 
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="hidden items-center gap-1 lg:flex">
           {LINKS.map((l) => (
             <Link
               key={l.href}
@@ -56,7 +56,7 @@ export function SiteNav() {
         </div>
 
         <button
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/10 text-slate-200 md:hidden"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/10 text-slate-200 lg:hidden"
           aria-label="Toggle menu"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -72,7 +72,7 @@ export function SiteNav() {
       </nav>
 
       {open && (
-        <div className="border-t border-white/10 bg-dusk-950 md:hidden">
+        <div className="border-t border-white/10 bg-dusk-950 lg:hidden">
           <div className="mx-auto flex max-w-6xl flex-col px-4 py-2 sm:px-6">
             {LINKS.map((l) => (
               <Link

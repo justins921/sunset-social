@@ -138,23 +138,23 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
                 <table className="w-full text-sm">
                   <thead className="text-left text-xs uppercase tracking-wider text-slate-500">
                     <tr>
-                      <th className="px-4 py-2 font-normal">Golfer</th>
-                      <th className="px-4 py-2 font-normal">Strokes</th>
-                      <th className="px-4 py-2 font-normal">Points</th>
-                      <th className="px-4 py-2 font-normal">Status</th>
+                      <th className="px-2 py-2 font-normal sm:px-4">Golfer</th>
+                      <th className="px-2 py-2 font-normal sm:px-4">Strokes</th>
+                      <th className="px-2 py-2 font-normal sm:px-4">Points</th>
+                      <th className="px-2 py-2 font-normal sm:px-4">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
                     {group.players.map((p) => (
                       <tr key={p.playerId}>
-                        <td className="px-4 py-2.5">
+                        <td className="px-2 py-2.5 sm:px-4">
                           <input type="hidden" name="playerId" value={p.playerId} />
                           <span className="mr-2 font-mono text-xs text-slate-500">
                             {p.slot}
                           </span>
                           {p.name}
                         </td>
-                        <td className="px-4 py-2.5">
+                        <td className="px-2 py-2.5 sm:px-4">
                           <input
                             type="number"
                             inputMode="numeric"
@@ -162,10 +162,10 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
                             max={99}
                             name={`strokes_${p.playerId}`}
                             defaultValue={p.strokes ?? ""}
-                            className="w-20 rounded-lg border border-white/10 bg-dusk-950 px-2 py-1.5 text-white outline-none focus:border-sunset-400"
+                            className="w-14 rounded-lg border border-white/10 bg-dusk-950 px-2 py-1.5 text-white outline-none focus:border-sunset-400 sm:w-20"
                           />
                         </td>
-                        <td className="px-4 py-2.5">
+                        <td className="px-2 py-2.5 sm:px-4">
                           <input
                             type="number"
                             inputMode="decimal"
@@ -175,10 +175,10 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
                             name={`points_${p.playerId}`}
                             value={rows[p.playerId].points}
                             onChange={(e) => setPoints(p.playerId, e.target.value)}
-                            className="w-20 rounded-lg border border-white/10 bg-dusk-950 px-2 py-1.5 text-white outline-none focus:border-sunset-400"
+                            className="w-14 rounded-lg border border-white/10 bg-dusk-950 px-2 py-1.5 text-white outline-none focus:border-sunset-400 sm:w-20"
                           />
                         </td>
-                        <td className="px-4 py-2.5">
+                        <td className="px-2 py-2.5 sm:px-4">
                           <select
                             name={`status_${p.playerId}`}
                             value={rows[p.playerId].status}
