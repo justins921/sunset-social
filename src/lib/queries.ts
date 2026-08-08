@@ -10,6 +10,8 @@ import {
 import { TEAMS, type Player } from "@/data/league";
 import { SEASON_2026 } from "@/data/season2026";
 
+type Sql = NonNullable<ReturnType<typeof getSql>>;
+
 // ---------------------------------------------------------------------------
 // Standings (DB-first, static fallback)
 // ---------------------------------------------------------------------------
@@ -41,10 +43,12 @@ export async function getTeamStandings(): Promise<RankedTeam[]> {
   }
 }
 
-export async function getIndividualStandings(): Promise<RankedPlayer[]> {
+export type RankedPlayerH = RankedPlayer & { handicap: number | null };
+
+export async function getIndividualStandings(): Promise<RankedPlayerH[]> {
   noStore();
   const sql = getSql();
-  if (!sql) return staticIndividualStandings();
+  if (!sql) return staticIndividualStandings().map((p) => ({ ...p, handicap: null }));
   try {
     await ensureSchema();
     const rows = await sql<
@@ -57,12 +61,14 @@ export async function getIndividualStandings(): Promise<RankedPlayer[]> {
       group by p.id, p.baseline_points`;
 
     const totalById = new Map(rows.map((r) => [r.id, r.total]));
+    const hcp = await handicapMap(sql);
     const flat = TEAMS.flatMap((t) =>
       t.players.map((p) => ({
         ...p,
         teamId: t.id,
         teamName: t.name,
         points: totalById.get(playerId(t.id, p.slot)) ?? p.points ?? 0,
+        handicap: hcp.get(playerId(t.id, p.slot)) ?? null,
       })),
     );
     return flat
@@ -70,7 +76,45 @@ export async function getIndividualStandings(): Promise<RankedPlayer[]> {
       .map((p, i) => ({ ...p, place: i + 1 }));
   } catch (e) {
     console.error("getIndividualStandings failed, using static data:", e);
-    return staticIndividualStandings();
+    return staticIndividualStandings().map((p) => ({ ...p, handicap: null }));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Handicaps (Rule 10): the average of a golfer's most recent (up to four)
+// 9-hole gross scores minus par 35, with no single score over double par (70)
+// counted. Floored at 0 and rounded to a whole stroke.
+// ---------------------------------------------------------------------------
+
+async function handicapMap(sql: Sql): Promise<Map<number, number>> {
+  const rows = await sql<{ player_id: number; strokes: number }[]>`
+    select r.player_id, r.strokes
+    from results r
+    join weeks w on w.id = r.week_id
+    where r.strokes is not null
+    order by w.sort desc`;
+  const recent = new Map<number, number[]>();
+  for (const r of rows) {
+    const list = recent.get(r.player_id) ?? [];
+    if (list.length < 4) list.push(Math.min(r.strokes, 70));
+    recent.set(r.player_id, list);
+  }
+  const out = new Map<number, number>();
+  for (const [pid, arr] of recent) {
+    const avg = arr.reduce((s, x) => s + x, 0) / arr.length;
+    out.set(pid, Math.max(0, Math.round(avg - 35)));
+  }
+  return out;
+}
+
+export async function getHandicaps(): Promise<Map<number, number>> {
+  const sql = getSql();
+  if (!sql) return new Map();
+  try {
+    await ensureSchema();
+    return await handicapMap(sql);
+  } catch {
+    return new Map();
   }
 }
 

@@ -18,6 +18,9 @@ export default async function TeamsPage() {
   const playerPoints = new Map(
     individuals.map((p) => [`${p.teamId}-${p.name}`, p.points ?? 0]),
   );
+  const playerHcp = new Map(
+    individuals.map((p) => [`${p.teamId}-${p.name}`, p.handicap]),
+  );
   // Display teams in numeric order for easy roster lookup.
   const teams = [...TEAMS].sort((a, b) => a.id - b.id);
 
@@ -66,6 +69,9 @@ export default async function TeamsPage() {
                           {p.phone}
                         </a>
                       )}
+                      <span className="hidden text-xs text-slate-500 sm:inline">
+                        Hcp {playerHcp.get(`${t.id}-${p.name}`) ?? "—"}
+                      </span>
                       <span className="font-mono text-sm text-slate-300">
                         {(playerPoints.get(`${t.id}-${p.name}`) ?? p.points ?? 0).toFixed(1)}
                       </span>

@@ -85,6 +85,7 @@ export default async function StandingsPage() {
                 <th className="px-4 py-3">#</th>
                 <th className="px-4 py-3">Golfer</th>
                 <th className="px-4 py-3">Team</th>
+                <th className="px-4 py-3 text-right">Hcp</th>
                 <th className="px-4 py-3 text-right">Points</th>
               </tr>
             </thead>
@@ -97,6 +98,9 @@ export default async function StandingsPage() {
                     <Link href={`/teams#team-${p.teamId}`} className="hover:text-sunset-300">
                       {p.teamName}
                     </Link>
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-slate-400">
+                    {p.handicap ?? "—"}
                   </td>
                   <td className="px-4 py-3 text-right font-mono font-semibold text-sunset-200">
                     {(p.points ?? 0).toFixed(1)}

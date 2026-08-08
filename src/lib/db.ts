@@ -1,6 +1,6 @@
 import "server-only";
 import postgres from "postgres";
-import { TEAMS, SCHEDULE } from "@/data/league";
+import { TEAMS, SCHEDULE, SUBS } from "@/data/league";
 import { SEASON_2026 } from "@/data/season2026";
 
 // ---------------------------------------------------------------------------
@@ -132,53 +132,90 @@ async function doEnsure(): Promise<void> {
       points numeric,
       primary key (week_id, team_id)
     )`;
+  await sql`create table if not exists app_meta (key text primary key, value text)`;
+  await sql`alter table weeks add column if not exists matchups text[]`;
+  await sql`
+    create table if not exists subs (
+      id int primary key,
+      name text not null,
+      phone text,
+      sort int not null default 0
+    )`;
+  await sql`
+    create table if not exists dues (
+      player_id int primary key references players(id) on delete cascade,
+      paid boolean not null default false,
+      amount numeric not null default 50,
+      paid_on date,
+      note text
+    )`;
+  await sql`
+    create table if not exists transactions (
+      id serial primary key,
+      occurred_on date not null default current_date,
+      description text not null,
+      amount numeric not null,
+      kind text not null default 'expense'
+    )`;
 
-  // Keep the reference data in sync with code on every deploy. Baselines are
-  // forced to 0 — the model is the pure sum of weekly points — which also
-  // migrates any rows an earlier (baseline-model) deploy seeded with non-zero
-  // totals.
-  await seedBase(sql);
+  // Once initialized, the database is the source of truth. Code data is only a
+  // first-time seed, so admin edits to rosters/schedule survive every redeploy.
+  const initialized =
+    (await sql`select value from app_meta where key = 'initialized'`).length > 0;
+  if (initialized) return;
 
-  // Load the full validated season only when no per-player results exist yet.
-  // This runs on a fresh database AND on one an earlier deploy had already
-  // created tables in without loading the season. Once any results are present
-  // (season loaded, or the secretary has entered a week) it never re-runs, so
-  // entered data is never clobbered.
+  // Not yet initialized: either a fresh database, or one an earlier deploy
+  // created tables in before this authoritative model existed.
+  await seedBase(sql); // inserts missing rows; syncs weeks/subs from code once
+
   const [{ count }] = await sql<{ count: number }[]>`
     select count(*)::int as count from results`;
   if (count === 0) await loadSeason(sql);
+
+  await sql`
+    insert into app_meta (key, value) values ('initialized', '1')
+    on conflict (key) do nothing`;
 }
 
 async function seedBase(sql: Sql): Promise<void> {
   await sql.begin(async (tx) => {
+    // Rosters: insert if missing, never overwrite existing (preserves any
+    // admin edits made before this one-time seed marked the DB initialized).
     for (let ti = 0; ti < TEAMS.length; ti++) {
       const t = TEAMS[ti];
       await tx`
         insert into teams (id, name, sort, baseline_points)
         values (${t.id}, ${t.name}, ${ti}, 0)
-        on conflict (id) do update
-          set name = excluded.name, sort = excluded.sort, baseline_points = 0`;
+        on conflict (id) do nothing`;
       for (let pi = 0; pi < t.players.length; pi++) {
         const p = t.players[pi];
         await tx`
           insert into players (id, team_id, slot, name, phone, sort, baseline_points)
           values (${playerId(t.id, p.slot)}, ${t.id}, ${p.slot}, ${p.name},
                   ${p.phone ?? null}, ${pi}, 0)
-          on conflict (id) do update
-            set team_id = excluded.team_id, slot = excluded.slot,
-                name = excluded.name, phone = excluded.phone,
-                sort = excluded.sort, baseline_points = 0`;
+          on conflict (id) do nothing`;
       }
     }
 
+    // Weeks + matchups: sync from code once (applies the corrected schedule to
+    // a database seeded by an earlier deploy).
     for (let wi = 0; wi < SCHEDULE.length; wi++) {
       const w = SCHEDULE[wi];
       await tx`
-        insert into weeks (id, play_date, label, note, sort, entry_open)
-        values (${weekId(wi)}, ${w.date}, ${w.label}, ${w.note ?? null}, ${wi}, true)
+        insert into weeks (id, play_date, label, note, sort, entry_open, matchups)
+        values (${weekId(wi)}, ${w.date}, ${w.label}, ${w.note ?? null}, ${wi}, true,
+                ${w.matchups ?? null})
         on conflict (id) do update
           set play_date = excluded.play_date, label = excluded.label,
-              note = excluded.note, sort = excluded.sort, entry_open = true`;
+              note = excluded.note, sort = excluded.sort, matchups = excluded.matchups`;
+    }
+
+    for (let si = 0; si < SUBS.length; si++) {
+      const s = SUBS[si];
+      await tx`
+        insert into subs (id, name, phone, sort)
+        values (${si + 1}, ${s.name}, ${s.phone ?? null}, ${si})
+        on conflict (id) do nothing`;
     }
   });
 }
