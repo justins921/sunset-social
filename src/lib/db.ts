@@ -181,23 +181,24 @@ async function doEnsure(): Promise<void> {
       data jsonb not null
     )`;
 
-  // Once initialized, the database is the source of truth. Code data is only a
-  // first-time seed, so admin edits to rosters/schedule survive every redeploy.
+  // Once initialized, the database is the source of truth for rosters/schedule,
+  // so admin edits survive every redeploy.
   const initialized =
     (await sql`select value from app_meta where key = 'initialized'`).length > 0;
-  if (initialized) return;
+  if (!initialized) {
+    // Fresh database, or one an earlier deploy created tables in before this
+    // authoritative model existed.
+    await seedBase(sql); // inserts missing rows; syncs weeks/subs from code once
+    await sql`
+      insert into app_meta (key, value) values ('initialized', '1')
+      on conflict (key) do nothing`;
+  }
 
-  // Not yet initialized: either a fresh database, or one an earlier deploy
-  // created tables in before this authoritative model existed.
-  await seedBase(sql); // inserts missing rows; syncs weeks/subs from code once
-
-  const [{ count }] = await sql<{ count: number }[]>`
-    select count(*)::int as count from results`;
-  if (count === 0) await loadSeason(sql);
-
-  await sql`
-    insert into app_meta (key, value) values ('initialized', '1')
-    on conflict (key) do nothing`;
+  // Always: load any season week from the code that has no data in the database
+  // yet. This seeds a fresh database with the full season, and lets a new week
+  // added to season2026.ts reach an already-live database on deploy — without
+  // ever touching a week that already has loaded or admin-entered results.
+  await loadMissingSeasonWeeks(sql);
 }
 
 async function seedBase(sql: Sql): Promise<void> {
@@ -243,14 +244,20 @@ async function seedBase(sql: Sql): Promise<void> {
   });
 }
 
-async function loadSeason(sql: Sql): Promise<void> {
-  await sql.begin(async (tx) => {
-    // Load the full validated 2026 season: per-player strokes & points,
-    // per-team points, and the night's recap.
-    for (const wk of SEASON_2026) {
-      const wid = weekIdByDate(wk.date);
-      if (wid <= 0) continue;
+async function loadMissingSeasonWeeks(sql: Sql): Promise<void> {
+  for (const wk of SEASON_2026) {
+    const wid = weekIdByDate(wk.date);
+    if (wid <= 0) continue;
 
+    // Skip a week that already has any data — never overwrite entered results.
+    const [{ has }] = await sql<{ has: boolean }[]>`
+      select (
+        exists(select 1 from results where week_id = ${wid})
+        or exists(select 1 from team_results where week_id = ${wid})
+      ) as has`;
+    if (has) continue;
+
+    await sql.begin(async (tx) => {
       for (const r of wk.results) {
         await tx`
           insert into results (week_id, player_id, strokes, points, status)
@@ -259,14 +266,12 @@ async function loadSeason(sql: Sql): Promise<void> {
           on conflict (week_id, player_id) do update
             set strokes = excluded.strokes, points = excluded.points`;
       }
-
       for (const [teamId, pts] of Object.entries(wk.teamPoints)) {
         await tx`
           insert into team_results (week_id, team_id, points)
           values (${wid}, ${Number(teamId)}, ${pts})
           on conflict (week_id, team_id) do update set points = excluded.points`;
       }
-
       if (wk.lowScores || wk.fiftyFifty) {
         await tx`
           insert into recaps (week_id, low_scores, fifty_fifty)
@@ -274,8 +279,8 @@ async function loadSeason(sql: Sql): Promise<void> {
           on conflict (week_id) do update
             set low_scores = excluded.low_scores, fifty_fifty = excluded.fifty_fifty`;
       }
-    }
-  });
+    });
+  }
 }
 
 const SLOTS = ["A", "B", "C", "D"] as const;
