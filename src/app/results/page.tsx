@@ -35,7 +35,15 @@ function WeekCard({
     <section className="overflow-hidden rounded-2xl border border-white/10 bg-dusk-800/40">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-white/5 px-5 py-4">
         <div>
-          <h2 className="text-lg font-bold">{week.label}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold">{week.label}</h2>
+            <Link
+              href={`/print/week/${week.id}`}
+              className="rounded-md border border-white/15 px-2 py-0.5 text-xs text-slate-300 hover:border-sunset-500/40 hover:text-sunset-200"
+            >
+              Export PDF
+            </Link>
+          </div>
           {week.note && <p className="text-sm text-sunset-200">{week.note}</p>}
         </div>
         {(week.lowScores || week.fiftyFifty) && (

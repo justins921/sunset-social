@@ -209,6 +209,151 @@ export type WeekResults = {
   teamPoints: TeamPointRow[];
 };
 
+// ---------------------------------------------------------------------------
+// Printable weekly report (a night's scorecards + standings AS OF that week)
+// ---------------------------------------------------------------------------
+
+export type ReportPlayer = {
+  slot: string;
+  name: string;
+  strokes: number | null;
+  points: number | null;
+  status: string;
+};
+export type ReportTeamCard = {
+  teamId: number;
+  name: string;
+  teamPoints: number | null;
+  players: ReportPlayer[];
+};
+export type ReportStanding = { id: number; name: string; points: number; place: number };
+export type ReportIndividual = {
+  place: number;
+  name: string;
+  teamName: string;
+  points: number;
+  handicap: number | null;
+};
+export type WeekReport = {
+  id: number;
+  label: string;
+  playDate: string | null;
+  note: string | null;
+  lowScores: string | null;
+  fiftyFifty: string | null;
+  cards: ReportTeamCard[];
+  teamStandings: ReportStanding[];
+  individual: ReportIndividual[];
+};
+
+export async function getWeekReport(id: number): Promise<WeekReport | null> {
+  noStore();
+  const sql = getSql();
+  if (!sql) return null;
+  await ensureSchema();
+
+  const weekRows = await sql<
+    {
+      id: number;
+      label: string;
+      play_date: string | null;
+      note: string | null;
+      sort: number;
+      low_scores: string | null;
+      fifty_fifty: string | null;
+    }[]
+  >`
+    select w.id, w.label, w.play_date::text as play_date, w.note, w.sort,
+           rc.low_scores, rc.fifty_fifty
+    from weeks w left join recaps rc on rc.week_id = w.id
+    where w.id = ${id}`;
+  if (weekRows.length === 0) return null;
+  const w = weekRows[0];
+
+  const roster = await getRoster();
+  const teamName = new Map(roster.teams.map((t) => [t.id, t.name]));
+
+  // This week's scorecards
+  const rows = await sql<
+    { team_id: number; slot: string; name: string; strokes: number | null; points: number | null; status: string }[]
+  >`
+    select p.team_id, p.slot, p.name, r.strokes, r.points::float8 as points, r.status
+    from results r join players p on p.id = r.player_id
+    where r.week_id = ${id}
+    order by p.team_id asc, p.sort asc`;
+  const teamPts = await sql<{ team_id: number; points: number | null }[]>`
+    select team_id, points::float8 as points from team_results where week_id = ${id}`;
+  const ptsByTeam = new Map(teamPts.map((t) => [t.team_id, t.points]));
+
+  const cardMap = new Map<number, ReportTeamCard>();
+  for (const t of roster.teams) {
+    if (rows.some((r) => r.team_id === t.id) || ptsByTeam.has(t.id)) {
+      cardMap.set(t.id, {
+        teamId: t.id,
+        name: t.name,
+        teamPoints: ptsByTeam.get(t.id) ?? null,
+        players: [],
+      });
+    }
+  }
+  for (const r of rows) {
+    cardMap.get(r.team_id)?.players.push({
+      slot: r.slot,
+      name: r.name,
+      strokes: r.strokes,
+      points: r.points,
+      status: r.status,
+    });
+  }
+  const cards = [...cardMap.values()].sort(
+    (a, b) => (b.teamPoints ?? 0) - (a.teamPoints ?? 0),
+  );
+
+  // Standings as of this week (only weeks up to and including this one)
+  const teamSums = await sql<{ team_id: number; pts: number }[]>`
+    select tr.team_id, coalesce(sum(tr.points), 0)::float8 as pts
+    from team_results tr join weeks wk on wk.id = tr.week_id
+    where wk.sort <= ${w.sort} group by tr.team_id`;
+  const teamStandings: ReportStanding[] = roster.teams
+    .map((t) => ({
+      id: t.id,
+      name: t.name,
+      points: teamSums.find((s) => s.team_id === t.id)?.pts ?? 0,
+    }))
+    .sort((a, b) => b.points - a.points)
+    .map((t, i) => ({ ...t, place: i + 1 }));
+
+  const indivSums = await sql<{ player_id: number; pts: number }[]>`
+    select r.player_id, coalesce(sum(r.points), 0)::float8 as pts
+    from results r join weeks wk on wk.id = r.week_id
+    where wk.sort <= ${w.sort} group by r.player_id`;
+  const ptsByPlayer = new Map(indivSums.map((s) => [s.player_id, s.pts]));
+  const hcp = await handicapMap(sql);
+  const individual: ReportIndividual[] = roster.teams
+    .flatMap((t) =>
+      t.players.map((p) => ({
+        name: p.name,
+        teamName: teamName.get(t.id) ?? `Team ${t.id}`,
+        points: ptsByPlayer.get(p.id) ?? 0,
+        handicap: hcp.get(p.id) ?? null,
+      })),
+    )
+    .sort((a, b) => b.points - a.points)
+    .map((p, i) => ({ ...p, place: i + 1 }));
+
+  return {
+    id: w.id,
+    label: w.label,
+    playDate: w.play_date,
+    note: w.note,
+    lowScores: w.low_scores,
+    fiftyFifty: w.fifty_fifty,
+    cards,
+    teamStandings,
+    individual,
+  };
+}
+
 /** Weeks that have entered scores or a recap, most recent first. */
 export async function getResultsWeeks(): Promise<WeekResults[]> {
   noStore();
