@@ -69,13 +69,11 @@ export type BanquetData = {
   awardsOverride: BanquetAwards | null;
 };
 
-const blanks = (n: number): string[] => Array.from({ length: n }, () => "");
-
-const dp = (n: number, item: string, count = 1): DoorPrize => ({
+const dp = (n: number, item: string, winners: string[]): DoorPrize => ({
   n,
   item,
-  count,
-  winners: blanks(count),
+  count: winners.length,
+  winners,
 });
 
 export const BANQUET_2026: BanquetData = {
@@ -103,33 +101,39 @@ export const BANQUET_2026: BanquetData = {
     "discount on your purchase. It's a great way to thank them for backing our league " +
     "while treating yourself to something new for your game.",
   doorPrizes: [
-    dp(1, "TaylorMade SIM2 MAX Irons"),
-    dp(2, "Titleist Scotty Cameron Putter with Cover"),
-    dp(3, "TaylorMade Qi4D Adjustable Fairway 9 Wood with Cover"),
-    dp(4, "Titleist GT2 Adjustable Fairway 7 Wood with Cover"),
-    dp(5, "Titleist GT2 Adjustable Fairway 5 Wood with Cover"),
-    dp(6, "Vortex Blade Golf Rangefinder"),
-    dp(7, "$100 Bill", 3),
-    dp(8, ""),
-    dp(9, ""),
-    dp(10, "Dozen Titleist Pro V1X", 10),
-    dp(11, ""),
-    dp(12, ""),
-    dp(13, ""),
-    dp(14, ""),
-    dp(15, ""),
-    dp(16, ""),
-    dp(17, ""),
-    dp(18, ""),
-    dp(19, ""),
-    dp(20, ""),
-    dp(21, "Westhaven 18 Holes with Cart for FOUR"),
-    dp(22, ""),
-    dp(23, ""),
-    dp(24, "Greene's Pour House $50 Gift Card", 6),
-    dp(25, ""),
-    dp(26, ""),
-    dp(27, "Sleeve of Titleist Pro V1X with Free Pour House Burger", 2),
+    dp(1, "TaylorMade SIM2 MAX Irons", ["Brad Schultz"]),
+    dp(2, "Titleist Scotty Cameron Putter with Cover", ["Ben Pitz"]),
+    dp(3, "TaylorMade Qi4D Adjustable Fairway 9 Wood with Cover", ["Tom Asuma"]),
+    dp(4, "Titleist GT2 Adjustable Fairway 7 Wood with Cover", ["Dan Schneider"]),
+    dp(5, "Titleist GT2 Adjustable Fairway 5 Wood with Cover", ["Ken Kuenzl"]),
+    dp(6, "Vortex Blade Golf Rangefinder", ["Phil Levine"]),
+    dp(7, "3 — $100 Bills", ["Mike Riese", "Dick Hanusa", "Gary Clark"]),
+    dp(8, "10 — Dozen Titleist Pro V1X", [
+      "Andrew Gesell",
+      "Mike Riese",
+      "Mike Riese",
+      "Jerry Stueber",
+      "Phil Levine",
+      "Andrew Gesell",
+      "Andrew Gesell",
+      "John Murphy",
+      "Jerry & Peter Stueber",
+      "Duane Bathke",
+    ]),
+    dp(9, "Westhaven 18 Holes with Cart for FOUR", ["Justin Sobojinski"]),
+    dp(10, "6 — Greene's Pour House $50 Gift Card", [
+      "Dick Hanusa",
+      "Dick Hanusa",
+      "Mike Muza",
+      "Jeff Scanlan",
+      "Dick Armock",
+      "Bill Smith",
+    ]),
+    dp(11, "3 — Sleeve of Titleist Pro V1X with Free Pour House Burger", [
+      "Dick Armock",
+      "Mike Lloyd",
+      "Dave Schutz",
+    ]),
   ],
   flightNight: [
     { flight: "A", name: "Ben Pitz", net: "27" },
@@ -141,8 +145,8 @@ export const BANQUET_2026: BanquetData = {
   mvpAwardName: "The Ken Kuenzl Award for the League's Most Valuable Player",
   improvedAwardName: "The Newman Whiley Award for the League's Most Improved Player",
   championAwardName: "Richard Dewing Memorial Award and League Champions",
-  fiftyFiftyAmount: "",
-  fiftyFiftyWinner: "",
+  fiftyFiftyAmount: "160.00",
+  fiftyFiftyWinner: "Jeff Steig",
   electionSeason: "2027",
   officers: [
     { office: "President", name: "Mike D. Lloyd" },

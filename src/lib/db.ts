@@ -239,6 +239,11 @@ async function doEnsure(): Promise<void> {
 
   // One-time load of the banquet script (guarded so admin edits are never lost).
   await loadBanquetIfMissing(sql);
+
+  // One-time overwrite of the 2026 banquet with the finalized results. Runs once
+  // (like the officer sync) so a database seeded with the earlier placeholder
+  // picks up the real door-prize winners and 50/50, then never clobbers edits.
+  await syncBanquetActualsIfNeeded(sql);
 }
 
 async function loadBanquetIfMissing(sql: Sql): Promise<void> {
@@ -249,6 +254,17 @@ async function loadBanquetIfMissing(sql: Sql): Promise<void> {
     BANQUET_2026,
   )})
             on conflict (season) do nothing`;
+}
+
+async function syncBanquetActualsIfNeeded(sql: Sql): Promise<void> {
+  const synced =
+    (await sql`select value from app_meta where key = 'banquet_2026_actuals'`).length > 0;
+  if (synced) return;
+  await sql`insert into banquet (season, data, updated_at)
+            values (${BANQUET_2026.year}, ${sql.json(BANQUET_2026)}, now())
+            on conflict (season) do update set data = excluded.data, updated_at = now()`;
+  await sql`insert into app_meta (key, value) values ('banquet_2026_actuals', '1')
+            on conflict (key) do nothing`;
 }
 
 async function loadFinancialsIfMissing(sql: Sql): Promise<void> {
