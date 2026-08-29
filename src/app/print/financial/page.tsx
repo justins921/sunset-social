@@ -1,9 +1,11 @@
+import { Fragment } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { LEAGUE } from "@/data/league";
 import { hasDb } from "@/lib/db";
 import { getFinancials } from "@/lib/queries";
 import { PrintButton } from "@/components/PrintButton";
+import { FitToPage } from "@/components/FitToPage";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Financial Report" };
@@ -17,7 +19,7 @@ export default async function FinancialReport() {
   if (!f) redirect("/");
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 print:m-0 print:max-w-none print:p-0">
       <div className="no-print mb-4 flex items-center justify-between">
         <Link href="/admin/treasury" className="text-sm text-slate-400 hover:text-sunset-300">
           ← Treasury
@@ -25,6 +27,7 @@ export default async function FinancialReport() {
         <PrintButton />
       </div>
 
+      <FitToPage>
       <div className="print-sheet rounded-xl bg-white p-6 text-slate-900 shadow sm:p-8">
         <header className="border-b-2 border-slate-800 pb-3 text-center">
           <h1 className="text-xl font-bold">{LEAGUE.name}</h1>
@@ -65,13 +68,23 @@ export default async function FinancialReport() {
             <table className="w-full text-xs">
               <tbody>
                 {f.expenses.map((r) => (
-                  <tr key={r.id} className="border-b border-slate-100 align-top">
-                    <td className="py-1 pr-2">
-                      {r.description}
-                      {r.checkNo && <span className="ml-1 text-slate-500">({r.checkNo})</span>}
-                    </td>
-                    <td className="whitespace-nowrap py-1 text-right font-mono">{money(r.amount)}</td>
-                  </tr>
+                  <Fragment key={r.id}>
+                    <tr className="border-b border-slate-100 align-top">
+                      <td className="py-1 pr-2">
+                        {r.description}
+                        {r.checkNo && <span className="ml-1 text-slate-500">({r.checkNo})</span>}
+                      </td>
+                      <td className="whitespace-nowrap py-1 text-right font-mono">{money(r.amount)}</td>
+                    </tr>
+                    {r.items.map((it) => (
+                      <tr key={it.id} className="text-[10px] text-slate-500">
+                        <td className="py-0.5 pl-3">↳ {it.description}</td>
+                        <td className="whitespace-nowrap py-0.5 text-right font-mono">
+                          {it.amount > 0 ? money(it.amount) : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </Fragment>
                 ))}
               </tbody>
               <tfoot>
@@ -102,9 +115,17 @@ export default async function FinancialReport() {
               </tbody>
             </table>
           </div>
-          <p className="mt-1 text-right text-xs font-semibold">
-            50/50 subtotal: <span className="font-mono">{money(f.fiftyTotal)}</span>
-          </p>
+          <div className="mt-1 flex flex-wrap items-center justify-end gap-x-4 text-xs">
+            {f.drawingTotals.length > 1 &&
+              f.drawingTotals.map((d) => (
+                <span key={d.kind} className="text-slate-500">
+                  {d.label}: <span className="font-mono">{money(d.total)}</span>
+                </span>
+              ))}
+            <span className="font-semibold">
+              Drawings subtotal: <span className="font-mono">{money(f.fiftyTotal)}</span>
+            </span>
+          </div>
         </section>
 
         {/* Totals */}
@@ -140,6 +161,7 @@ export default async function FinancialReport() {
           {LEAGUE.name} · Financial Report generated from the league website.
         </p>
       </div>
+      </FitToPage>
     </div>
   );
 }

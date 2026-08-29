@@ -20,6 +20,14 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Fit-to-one-page wrapper. On screen the content renders at the print width so
+ * the measured height matches the printout; the transform only applies in print. */
+.fitinner {
+  width: 720px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
 /* Printable reports: hide the site chrome and print on white paper. */
 @media print {
   header,
@@ -36,7 +44,13 @@ body {
     margin: 0 !important;
     max-width: none !important;
   }
+  /* One-page fit: `zoom` shrinks the real layout so pagination fits one page. */
+  .fitinner {
+    width: 720px;
+    zoom: var(--fit, 1);
+  }
   @page {
-    margin: 12mm;
+    size: letter;
+    margin: 10mm;
   }
 }

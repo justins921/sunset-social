@@ -4,7 +4,14 @@
 // debits $7,412.43 = money on hand $3.73.
 
 export type FinIncome = { date: string; description: string; amount: number; category: string };
-export type FinExpense = { date: string; description: string; amount: number; checkNo: string | null };
+export type FinExpenseItem = { description: string; amount: number };
+export type FinExpense = {
+  date: string;
+  description: string;
+  amount: number;
+  checkNo: string | null;
+  items?: FinExpenseItem[];
+};
 export type FinFifty = { date: string; amount: number; winner: string };
 
 export const FIN_INCOME_2026: FinIncome[] = [
@@ -38,11 +45,42 @@ export const FIN_EXPENSE_2026: FinExpense[] = [
   { date: "2026-07-30", description: "Jeff's On Rugby — Chicken Tenders", amount: 320.0, checkNo: "CK#1333" },
   { date: "2026-07-30", description: "FNR#3", amount: 150.0, checkNo: null },
   { date: "2026-04-23", description: "Bank Checks", amount: 24.05, checkNo: null },
-  { date: "2026-08-27", description: "Golfers Outlet", amount: 2404.5, checkNo: "CK#1335" },
+  {
+    date: "2026-08-27",
+    description: "Golfers Outlet — door prizes",
+    amount: 2404.5,
+    checkNo: "CK#1335",
+    // Prize lineup from the banquet; enter each price from the receipt (the
+    // itemized subtotal should add up to the check total above).
+    items: [
+      { description: "TaylorMade SIM2 MAX Irons", amount: 0 },
+      { description: "TaylorMade Qi4D Adjustable Fairway 9 Wood", amount: 0 },
+      { description: "Titleist GT2 Adjustable Fairway 7 Wood", amount: 0 },
+      { description: "Titleist GT2 Adjustable Fairway 5 Wood", amount: 0 },
+      { description: "Vortex Blade Golf Rangefinder", amount: 0 },
+      { description: "Dozen Titleist Pro V1X (×10)", amount: 0 },
+      { description: "Sleeve of Titleist Pro V1X (×3)", amount: 0 },
+    ],
+  },
   { date: "2026-08-27", description: "Cash for League Award Winners", amount: 1687.0, checkNo: "CK#1336" },
-  { date: "2026-08-27", description: "Golfers Outlet — Titleist Putter", amount: 393.75, checkNo: "CK#1337" },
+  {
+    date: "2026-08-27",
+    description: "Golfers Outlet — Titleist Scotty Cameron Putter",
+    amount: 393.75,
+    checkNo: "CK#1337",
+    items: [{ description: "Titleist Scotty Cameron Putter with Cover", amount: 393.75 }],
+  },
   { date: "2026-08-27", description: "Greene's Pour House — 39 Burgers", amount: 452.15, checkNo: "CK#1338" },
-  { date: "2026-08-27", description: "6 — $50 Gift Cards", amount: 300.0, checkNo: "CK#1339" },
+  {
+    date: "2026-08-27",
+    description: "Greene's Pour House — $50 Gift Cards",
+    amount: 300.0,
+    checkNo: "CK#1339",
+    items: Array.from({ length: 6 }, () => ({
+      description: "Greene's Pour House $50 Gift Card",
+      amount: 50.0,
+    })),
+  },
   { date: "2026-08-27", description: "Banquet Tickets", amount: 750.0, checkNo: null },
   { date: "2026-08-27", description: "Plaque Engraving", amount: 30.98, checkNo: "CK#1340" },
 ];

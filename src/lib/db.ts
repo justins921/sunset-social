@@ -202,6 +202,17 @@ async function doEnsure(): Promise<void> {
     create table if not exists fin_5050 (
       id serial primary key, occurred_on date, winner text, amount numeric not null
     )`;
+  // Drawing type: the weekly 50/50, or a Fun Night $100 / $50 drawing.
+  await sql`alter table fin_5050 add column if not exists kind text not null default '50/50'`;
+  // Itemized line-items under an expense (e.g. each prize on a receipt).
+  await sql`
+    create table if not exists fin_expense_item (
+      id serial primary key,
+      expense_id int not null references fin_expense(id) on delete cascade,
+      description text not null,
+      amount numeric not null default 0,
+      sort int not null default 0
+    )`;
   // Year-end banquet script / run-of-show, one editable record per season.
   await sql`
     create table if not exists banquet (
@@ -236,6 +247,11 @@ async function doEnsure(): Promise<void> {
   // One-time sync of the current officer slate. Independent of the financial
   // load above so it also reaches a DB seeded before titles existed.
   await syncOfficersIfNeeded(sql);
+
+  // One-time backfill of expense line-items for a database that loaded the
+  // financials before itemization existed (matched to the parent by check
+  // number, then marked done). Independent of the financial-load marker.
+  await syncExpenseItemsIfNeeded(sql);
 
   // One-time load of the banquet script (guarded so admin edits are never lost).
   await loadBanquetIfMissing(sql);
@@ -282,15 +298,48 @@ async function loadFinancialsIfMissing(sql: Sql): Promise<void> {
       for (const r of FIN_INCOME_2026)
         await tx`insert into fin_income (occurred_on, description, amount, category)
                  values (${r.date}, ${r.description}, ${r.amount}, ${r.category})`;
-      for (const r of FIN_EXPENSE_2026)
-        await tx`insert into fin_expense (occurred_on, description, amount, check_no)
-                 values (${r.date}, ${r.description}, ${r.amount}, ${r.checkNo})`;
+      for (const r of FIN_EXPENSE_2026) {
+        const [{ id }] = await tx<{ id: number }[]>`
+          insert into fin_expense (occurred_on, description, amount, check_no)
+          values (${r.date}, ${r.description}, ${r.amount}, ${r.checkNo})
+          returning id`;
+        await insertExpenseItems(tx as unknown as Sql, id, r.items);
+      }
       for (const r of FIN_FIFTY_2026)
         await tx`insert into fin_5050 (occurred_on, winner, amount)
                  values (${r.date}, ${r.winner}, ${r.amount})`;
     });
   }
   await sql`insert into app_meta (key, value) values ('fin_2026_loaded', '1')
+            on conflict (key) do nothing`;
+}
+
+async function insertExpenseItems(
+  tx: Sql,
+  expenseId: number,
+  items: { description: string; amount: number }[] | undefined,
+): Promise<void> {
+  if (!items) return;
+  for (let i = 0; i < items.length; i++)
+    await tx`insert into fin_expense_item (expense_id, description, amount, sort)
+             values (${expenseId}, ${items[i].description}, ${items[i].amount}, ${i})`;
+}
+
+async function syncExpenseItemsIfNeeded(sql: Sql): Promise<void> {
+  const synced =
+    (await sql`select value from app_meta where key = 'fin_items_2026_loaded'`).length > 0;
+  if (synced) return;
+  const [{ n }] = await sql<{ n: number }[]>`select count(*)::int as n from fin_expense_item`;
+  if (n === 0) {
+    for (const r of FIN_EXPENSE_2026) {
+      if (!r.items) continue;
+      const match = r.checkNo
+        ? await sql<{ id: number }[]>`select id from fin_expense where check_no = ${r.checkNo} order by id limit 1`
+        : await sql<{ id: number }[]>`select id from fin_expense where check_no is null and description = ${r.description} order by id limit 1`;
+      if (match[0]) await insertExpenseItems(sql, match[0].id, r.items);
+    }
+  }
+  await sql`insert into app_meta (key, value) values ('fin_items_2026_loaded', '1')
             on conflict (key) do nothing`;
 }
 

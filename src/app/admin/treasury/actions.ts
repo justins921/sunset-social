@@ -6,6 +6,8 @@ import { isAuthed } from "@/lib/auth";
 import {
   addIncome,
   addExpense,
+  addExpenseItem,
+  removeExpenseItem,
   addFifty,
   removeFin,
   setOfficers,
@@ -62,7 +64,30 @@ export async function addFiftyAction(formData: FormData) {
       dateOf(formData.get("date")),
       String(formData.get("winner") ?? "").trim(),
       amount,
+      String(formData.get("kind") ?? "50/50").trim() || "50/50",
     );
+    refresh();
+  }
+  redirect("/admin/treasury");
+}
+
+export async function addExpenseItemAction(formData: FormData) {
+  if (!isAuthed()) redirect("/admin/login");
+  const expenseId = Number(formData.get("expenseId"));
+  const desc = String(formData.get("description") ?? "").trim();
+  const amount = num(formData.get("amount"));
+  if (Number.isFinite(expenseId) && desc) {
+    await addExpenseItem(expenseId, desc, amount);
+    refresh();
+  }
+  redirect("/admin/treasury");
+}
+
+export async function removeExpenseItemAction(formData: FormData) {
+  if (!isAuthed()) redirect("/admin/login");
+  const id = Number(formData.get("id"));
+  if (Number.isFinite(id)) {
+    await removeExpenseItem(id);
     refresh();
   }
   redirect("/admin/treasury");

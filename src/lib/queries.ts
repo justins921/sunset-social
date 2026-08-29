@@ -904,6 +904,7 @@ export async function archiveCurrentSeason(label: string): Promise<number> {
     attendance,
     finIncome,
     finExpense,
+    finExpenseItems,
     finFifty,
     standings,
     banquetRows,
@@ -918,7 +919,8 @@ export async function archiveCurrentSeason(label: string): Promise<number> {
     sql`select * from meeting_attendance`,
     sql`select id, occurred_on::text as occurred_on, description, amount, category from fin_income order by id`,
     sql`select id, occurred_on::text as occurred_on, description, amount, check_no from fin_expense order by id`,
-    sql`select id, occurred_on::text as occurred_on, winner, amount from fin_5050 order by id`,
+    sql`select id, expense_id, description, amount, sort from fin_expense_item order by expense_id, sort, id`,
+    sql`select id, occurred_on::text as occurred_on, winner, amount, kind from fin_5050 order by id`,
     getTeamStandings(),
     sql`select season, data from banquet order by season`,
   ]);
@@ -934,6 +936,7 @@ export async function archiveCurrentSeason(label: string): Promise<number> {
     attendance,
     finIncome,
     finExpense,
+    finExpenseItems,
     finFifty,
     standings,
     banquet: banquetRows,
@@ -1228,24 +1231,41 @@ export type FinIncomeRow = {
   amount: number;
   category: string | null;
 };
+export type FinExpenseItemRow = { id: number; description: string; amount: number };
 export type FinExpenseRow = {
   id: number;
   date: string | null;
   description: string;
   amount: number;
   checkNo: string | null;
+  items: FinExpenseItemRow[];
 };
 export type FinFiftyRow = {
   id: number;
   date: string | null;
   winner: string | null;
   amount: number;
+  kind: string;
 };
+
+// The drawings run each week. "50/50" is the weekly pot; Fun Night rounds add a
+// $100 and a $50 drawing. Each is tracked independently so the money brought in
+// per drawing is visible.
+export const DRAWING_KINDS = [
+  { value: "50/50", label: "50/50" },
+  { value: "fnr100", label: "Fun Night $100" },
+  { value: "fnr50", label: "Fun Night $50" },
+] as const;
+export const drawingLabel = (kind: string) =>
+  DRAWING_KINDS.find((k) => k.value === kind)?.label ?? kind;
+
 export type Financials = {
   income: FinIncomeRow[];
   expenses: FinExpenseRow[];
   fifty: FinFiftyRow[];
   fiftyTotal: number;
+  /** Money brought in per drawing kind, e.g. 50/50 vs the Fun Night drawings. */
+  drawingTotals: { kind: string; label: string; total: number }[];
   incomeTotal: number;
   grandTotal: number;
   debitTotal: number;
@@ -1258,22 +1278,40 @@ export async function getFinancials(): Promise<Financials | null> {
   const sql = getSql();
   if (!sql) return null;
   await ensureSchema();
-  const [income, expenses, fifty, meta] = await Promise.all([
+  const [income, expenseRows, items, fifty, meta] = await Promise.all([
     sql<FinIncomeRow[]>`
       select id, occurred_on::text as date, description, amount::float8 as amount, category
       from fin_income order by occurred_on asc nulls last, id asc`,
-    sql<FinExpenseRow[]>`
+    sql<Omit<FinExpenseRow, "items">[]>`
       select id, occurred_on::text as date, description, amount::float8 as amount, check_no as "checkNo"
       from fin_expense order by occurred_on asc nulls last, id asc`,
+    sql<{ id: number; expenseId: number; description: string; amount: number }[]>`
+      select id, expense_id as "expenseId", description, amount::float8 as amount
+      from fin_expense_item order by expense_id asc, sort asc, id asc`,
     sql<FinFiftyRow[]>`
-      select id, occurred_on::text as date, winner, amount::float8 as amount
+      select id, occurred_on::text as date, winner, amount::float8 as amount, kind
       from fin_5050 order by occurred_on asc nulls last, id asc`,
     sql<{ key: string; value: string }[]>`
       select key, value from app_meta where key like 'officer%\_name' escape '\'
          or key like 'officer%\_title' escape '\'`,
   ]);
+  const itemsByExpense = new Map<number, FinExpenseItemRow[]>();
+  for (const it of items) {
+    const list = itemsByExpense.get(it.expenseId) ?? [];
+    list.push({ id: it.id, description: it.description, amount: it.amount });
+    itemsByExpense.set(it.expenseId, list);
+  }
+  const expenses: FinExpenseRow[] = expenseRows.map((e) => ({
+    ...e,
+    items: itemsByExpense.get(e.id) ?? [],
+  }));
   const m = new Map(meta.map((r) => [r.key, r.value]));
   const fiftyTotal = fifty.reduce((s, r) => s + r.amount, 0);
+  const drawingTotals = DRAWING_KINDS.map((k) => ({
+    kind: k.value,
+    label: k.label,
+    total: fifty.filter((r) => (r.kind || "50/50") === k.value).reduce((s, r) => s + r.amount, 0),
+  })).filter((d) => d.total > 0);
   const incomeTotal = income.reduce((s, r) => s + r.amount, 0);
   const debitTotal = expenses.reduce((s, r) => s + r.amount, 0);
   const grandTotal = incomeTotal + fiftyTotal;
@@ -1282,6 +1320,7 @@ export async function getFinancials(): Promise<Financials | null> {
     expenses,
     fifty,
     fiftyTotal,
+    drawingTotals,
     incomeTotal,
     grandTotal,
     debitTotal,
@@ -1310,10 +1349,21 @@ export async function addExpense(date: string | null, description: string, amoun
   await sql`insert into fin_expense (occurred_on, description, amount, check_no)
             values (${date}, ${description}, ${amount}, ${checkNo})`;
 }
-export async function addFifty(date: string | null, winner: string, amount: number) {
+export async function addExpenseItem(expenseId: number, description: string, amount: number) {
   const sql = await requireSql();
-  await sql`insert into fin_5050 (occurred_on, winner, amount)
-            values (${date}, ${winner}, ${amount})`;
+  const [{ next }] = await sql<{ next: number }[]>`
+    select coalesce(max(sort) + 1, 0)::int as next from fin_expense_item where expense_id = ${expenseId}`;
+  await sql`insert into fin_expense_item (expense_id, description, amount, sort)
+            values (${expenseId}, ${description}, ${amount}, ${next})`;
+}
+export async function removeExpenseItem(id: number) {
+  const sql = await requireSql();
+  await sql`delete from fin_expense_item where id = ${id}`;
+}
+export async function addFifty(date: string | null, winner: string, amount: number, kind: string) {
+  const sql = await requireSql();
+  await sql`insert into fin_5050 (occurred_on, winner, amount, kind)
+            values (${date}, ${winner}, ${amount}, ${kind})`;
 }
 export async function removeFin(table: "income" | "expense" | "fifty", id: number) {
   const sql = await requireSql();
