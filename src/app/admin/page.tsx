@@ -42,6 +42,7 @@ export default async function AdminDashboard() {
             { href: "/admin/roster", title: "Teams & roster", sub: "Players, subs, new season" },
             { href: "/admin/schedule", title: "Schedule", sub: "Weeks, matchups, generator" },
             { href: "/admin/treasury", title: "Treasury", sub: "Dues, ledger, balance" },
+            { href: "/admin/banquet", title: "Banquet", sub: "Year-end script & awards" },
             { href: "/admin/minutes", title: "Minutes", sub: "Meetings & attendance" },
             { href: "/admin/seasons", title: "Season archive", sub: "Past seasons, saved in full" },
           ].map((c) => (

@@ -9,6 +9,14 @@ import {
 } from "@/lib/standings";
 import { TEAMS, SCHEDULE, type Player } from "@/data/league";
 import { SEASON_2026 } from "@/data/season2026";
+import {
+  BANQUET_2026,
+  type BanquetData,
+  type BanquetAwards,
+  type MvpEntry,
+  type PlaceEntry,
+  type ImprovedEntry,
+} from "@/data/banquet2026";
 
 type Sql = NonNullable<ReturnType<typeof getSql>>;
 
@@ -898,6 +906,7 @@ export async function archiveCurrentSeason(label: string): Promise<number> {
     finExpense,
     finFifty,
     standings,
+    banquetRows,
   ] = await Promise.all([
     sql`select * from teams order by sort, id`,
     sql`select * from players order by team_id, sort`,
@@ -911,6 +920,7 @@ export async function archiveCurrentSeason(label: string): Promise<number> {
     sql`select id, occurred_on::text as occurred_on, description, amount, check_no from fin_expense order by id`,
     sql`select id, occurred_on::text as occurred_on, winner, amount from fin_5050 order by id`,
     getTeamStandings(),
+    sql`select season, data from banquet order by season`,
   ]);
   const champion = standings[0]?.name ?? null;
   const data = {
@@ -926,6 +936,7 @@ export async function archiveCurrentSeason(label: string): Promise<number> {
     finExpense,
     finFifty,
     standings,
+    banquet: banquetRows,
   };
   const [row] = await sql<{ id: number }[]>`
     insert into seasons (label, champion, data)
@@ -942,6 +953,8 @@ export async function startNewSeason(label: string): Promise<void> {
   if (!sql) throw new Error("No database configured");
   await ensureSchema();
   await archiveCurrentSeason(label);
+  const [banquet] = await sql<{ season: number; data: BanquetData }[]>`
+    select season, data from banquet order by season desc limit 1`;
   await sql.begin(async (tx) => {
     await tx`delete from results`;
     await tx`delete from team_results`;
@@ -952,7 +965,30 @@ export async function startNewSeason(label: string): Promise<void> {
     await tx`delete from fin_5050`;
     await tx`delete from dues`;
     await tx`delete from transactions`;
+    // Roll the banquet script forward: keep the door-prize template, officers
+    // and boilerplate; bump the year and clear this season's winners so next
+    // year starts from a clean sheet.
+    if (banquet) {
+      const next = rollBanquet(banquet.data);
+      await tx`delete from banquet`;
+      await tx`insert into banquet (season, data) values (${next.year}, ${tx.json(next)})`;
+    }
   });
+}
+
+function rollBanquet(d: BanquetData): BanquetData {
+  const year = (Number(d.year) || new Date().getFullYear()) + 1;
+  return {
+    ...d,
+    year,
+    electionSeason: String(year + 1),
+    doorPrizes: d.doorPrizes.map((p) => ({ ...p, winners: p.winners.map(() => "") })),
+    flightNight: d.flightNight.map((f) => ({ ...f, name: "", net: "" })),
+    holeEvents: d.holeEvents.map((h) => ({ ...h, winner: "" })),
+    fiftyFiftyAmount: "",
+    fiftyFiftyWinner: "",
+    awardsOverride: null,
+  };
 }
 
 export type ArchivedSeason = {
@@ -1297,4 +1333,136 @@ export async function setOfficers(officers: { name: string; title: string }[]) {
                 on conflict (key) do update set value = excluded.value`;
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Banquet (year-end run-of-show + awards)
+// ---------------------------------------------------------------------------
+
+export type Banquet = {
+  data: BanquetData;
+  /** Awards computed live from the standings. */
+  computed: BanquetAwards;
+  /** What the booklet prints: the manual override when set, else `computed`. */
+  awards: BanquetAwards;
+};
+
+/** Compute the award winners from the season standings: League MVP(s) (top
+ *  individual point total, including ties), each team's MVP (its top player),
+ *  the top-three place teams, and Most Improved (largest drop between a
+ *  golfer's first-half and second-half scoring average). */
+export async function getBanquetAwards(): Promise<BanquetAwards> {
+  noStore();
+  const [teams, players] = await Promise.all([
+    getTeamStandings(),
+    getIndividualStandings(),
+  ]);
+
+  // League MVP(s): everyone tied at the highest point total.
+  const top = players[0]?.points ?? 0;
+  const leagueMvps: MvpEntry[] =
+    top > 0
+      ? players
+          .filter((p) => (p.points ?? 0) === top)
+          .map((p) => ({
+            teamId: p.teamId,
+            teamName: p.teamName,
+            name: p.name,
+            points: p.points ?? 0,
+          }))
+      : [];
+  const mvpNames = new Set(leagueMvps.map((m) => `${m.teamId}:${m.name}`));
+
+  // Each team's MVP: its highest-scoring player. Teams whose top player is a
+  // league MVP are omitted, matching how the award is read at the banquet.
+  const bestByTeam = new Map<number, MvpEntry>();
+  for (const p of players) {
+    const pts = p.points ?? 0;
+    const cur = bestByTeam.get(p.teamId);
+    if (!cur || pts > cur.points)
+      bestByTeam.set(p.teamId, {
+        teamId: p.teamId,
+        teamName: p.teamName,
+        name: p.name,
+        points: pts,
+      });
+  }
+  const teamMvps: MvpEntry[] = [...bestByTeam.values()]
+    .filter((m) => m.points > 0 && !mvpNames.has(`${m.teamId}:${m.name}`))
+    .sort((a, b) => a.teamId - b.teamId);
+
+  // Place winners: the top three teams by points.
+  const placeWinners: PlaceEntry[] = teams.slice(0, 3).map((t, i) => ({
+    place: i + 1,
+    teamId: t.id,
+    teamName: t.name,
+    points: t.points,
+    players: t.players.map((p) => p.name),
+  }));
+
+  const mostImproved = await computeMostImproved();
+  return { leagueMvps, teamMvps, placeWinners, mostImproved };
+}
+
+async function computeMostImproved(): Promise<ImprovedEntry | null> {
+  const sql = getSql();
+  if (!sql) return null;
+  const rows = await sql<{ player_id: number; strokes: number; sort: number }[]>`
+    select r.player_id, r.strokes, w.sort
+    from results r join weeks w on w.id = r.week_id
+    where r.strokes is not null
+    order by w.sort asc`;
+  if (rows.length === 0) return null;
+  const byPlayer = new Map<number, number[]>();
+  for (const r of rows) {
+    const list = byPlayer.get(r.player_id) ?? [];
+    list.push(r.strokes);
+    byPlayer.set(r.player_id, list);
+  }
+  const roster = await getRoster();
+  const nameOf = new Map<number, { name: string; teamId: number; teamName: string }>();
+  for (const t of roster.teams)
+    for (const p of t.players)
+      nameOf.set(p.id, { name: p.name, teamId: t.id, teamName: t.name });
+
+  let best: ImprovedEntry | null = null;
+  for (const [pid, scores] of byPlayer) {
+    // Need enough rounds to split into two halves.
+    if (scores.length < 4) continue;
+    const mid = Math.floor(scores.length / 2);
+    const first = scores.slice(0, mid);
+    const second = scores.slice(mid);
+    const avg = (a: number[]) => a.reduce((s, x) => s + x, 0) / a.length;
+    const firstAvg = Math.round(avg(first) * 10) / 10;
+    const secondAvg = Math.round(avg(second) * 10) / 10;
+    const improvement = firstAvg - secondAvg;
+    const who = nameOf.get(pid);
+    if (!who) continue;
+    if (improvement > 0 && (!best || improvement > best.firstAvg - best.secondAvg))
+      best = { teamId: who.teamId, teamName: who.teamName, name: who.name, firstAvg, secondAvg };
+  }
+  return best;
+}
+
+export async function getBanquet(): Promise<Banquet> {
+  noStore();
+  const sql = getSql();
+  const computed = await getBanquetAwards();
+  if (!sql) {
+    const data = BANQUET_2026;
+    return { data, computed, awards: data.awardsOverride ?? computed };
+  }
+  await ensureSchema();
+  const [row] = await sql<{ data: BanquetData }[]>`
+    select data from banquet order by season desc limit 1`;
+  const data = row?.data ?? BANQUET_2026;
+  return { data, computed, awards: data.awardsOverride ?? computed };
+}
+
+export async function saveBanquet(data: BanquetData): Promise<void> {
+  const sql = await requireSql();
+  await sql`insert into banquet (season, data, updated_at)
+            values (${data.year}, ${sql.json(data)}, now())
+            on conflict (season) do update
+              set data = excluded.data, updated_at = now()`;
 }

@@ -8,6 +8,7 @@ import {
   FIN_FIFTY_2026,
   FIN_OFFICERS,
 } from "@/data/financials2026";
+import { BANQUET_2026 } from "@/data/banquet2026";
 
 // ---------------------------------------------------------------------------
 // Connection
@@ -201,6 +202,13 @@ async function doEnsure(): Promise<void> {
     create table if not exists fin_5050 (
       id serial primary key, occurred_on date, winner text, amount numeric not null
     )`;
+  // Year-end banquet script / run-of-show, one editable record per season.
+  await sql`
+    create table if not exists banquet (
+      season int primary key,
+      data jsonb not null,
+      updated_at timestamptz not null default now()
+    )`;
 
   // Once initialized, the database is the source of truth for rosters/schedule,
   // so admin edits survive every redeploy.
@@ -228,6 +236,19 @@ async function doEnsure(): Promise<void> {
   // One-time sync of the current officer slate. Independent of the financial
   // load above so it also reaches a DB seeded before titles existed.
   await syncOfficersIfNeeded(sql);
+
+  // One-time load of the banquet script (guarded so admin edits are never lost).
+  await loadBanquetIfMissing(sql);
+}
+
+async function loadBanquetIfMissing(sql: Sql): Promise<void> {
+  const exists =
+    (await sql`select 1 from banquet where season = ${BANQUET_2026.year}`).length > 0;
+  if (exists) return;
+  await sql`insert into banquet (season, data) values (${BANQUET_2026.year}, ${sql.json(
+    BANQUET_2026,
+  )})
+            on conflict (season) do nothing`;
 }
 
 async function loadFinancialsIfMissing(sql: Sql): Promise<void> {
