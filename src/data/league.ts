@@ -17,9 +17,9 @@ export const LEAGUE = {
   standingsAsOf: "August 6, 2026",
   rosterAsOf: "August 6, 2026",
   contact: {
-    name: "Peter Stueber",
-    email: "peterd1@charter.net",
-    phone: "920.426.1114",
+    name: "Justin Sobojinski",
+    email: "justin.sobojinski@gmail.com",
+    phone: "920.527.8841",
   },
 } as const;
 
