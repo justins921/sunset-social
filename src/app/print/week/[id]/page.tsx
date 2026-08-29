@@ -3,6 +3,7 @@ import Link from "next/link";
 import { LEAGUE } from "@/data/league";
 import { getWeekReport } from "@/lib/queries";
 import { PrintButton } from "@/components/PrintButton";
+import { FitToPage } from "@/components/FitToPage";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Results report" };
@@ -25,7 +26,7 @@ export default async function WeekReportPage({
   if (!r) notFound();
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
+    <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 print:m-0 print:max-w-none print:p-0">
       <div className="no-print mb-4 flex items-center justify-between">
         <Link href="/results" className="text-sm text-slate-400 hover:text-sunset-300">
           ← Results
@@ -34,6 +35,7 @@ export default async function WeekReportPage({
       </div>
 
       {/* The printable sheet */}
+      <FitToPage>
       <div className="print-sheet rounded-xl bg-white p-6 text-slate-900 shadow sm:p-8">
         <header className="border-b border-slate-300 pb-4">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
@@ -169,6 +171,7 @@ export default async function WeekReportPage({
           {LEAGUE.name} · Generated from the league website.
         </p>
       </div>
+      </FitToPage>
     </div>
   );
 }

@@ -252,6 +252,9 @@ async function doEnsure(): Promise<void> {
   // financials before itemization existed (matched to the parent by check
   // number, then marked done). Independent of the financial-load marker.
   await syncExpenseItemsIfNeeded(sql);
+  // One-time refresh of the seeded receipt items (e.g. the CK#1335 breakdown
+  // once the real receipt was available), replacing the earlier placeholders.
+  await syncReceiptItemsV2(sql);
 
   // One-time load of the banquet script (guarded so admin edits are never lost).
   await loadBanquetIfMissing(sql);
@@ -340,6 +343,27 @@ async function syncExpenseItemsIfNeeded(sql: Sql): Promise<void> {
     }
   }
   await sql`insert into app_meta (key, value) values ('fin_items_2026_loaded', '1')
+            on conflict (key) do nothing`;
+}
+
+// Re-seed the itemized expense breakdowns once, replacing the placeholders that
+// an earlier deploy attached. Runs a single time (marker-guarded) so it never
+// clobbers later manual edits.
+async function syncReceiptItemsV2(sql: Sql): Promise<void> {
+  const done =
+    (await sql`select value from app_meta where key = 'fin_items_v2'`).length > 0;
+  if (done) return;
+  for (const r of FIN_EXPENSE_2026) {
+    if (!r.items) continue;
+    const match = r.checkNo
+      ? await sql<{ id: number }[]>`select id from fin_expense where check_no = ${r.checkNo} order by id limit 1`
+      : await sql<{ id: number }[]>`select id from fin_expense where check_no is null and description = ${r.description} order by id limit 1`;
+    if (match[0]) {
+      await sql`delete from fin_expense_item where expense_id = ${match[0].id}`;
+      await insertExpenseItems(sql, match[0].id, r.items);
+    }
+  }
+  await sql`insert into app_meta (key, value) values ('fin_items_v2', '1')
             on conflict (key) do nothing`;
 }
 

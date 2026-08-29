@@ -4,7 +4,6 @@ import { LEAGUE } from "@/data/league";
 import { hasDb } from "@/lib/db";
 import { getBanquet } from "@/lib/queries";
 import { PrintButton } from "@/components/PrintButton";
-import { FitToPage } from "@/components/FitToPage";
 import type { BanquetAwards } from "@/data/banquet2026";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +63,6 @@ export default async function BanquetAgenda({
         </div>
       </div>
 
-      <FitToPage>
       <div className="print-sheet space-y-5 rounded-xl bg-white p-6 text-slate-900 shadow sm:p-10">
         {/* Cover */}
         <header className="border-b-2 border-slate-800 pb-4 text-center">
@@ -182,7 +180,6 @@ export default async function BanquetAgenda({
           {LEAGUE.name} · Banquet agenda generated from the league website.
         </p>
       </div>
-      </FitToPage>
     </div>
   );
 }

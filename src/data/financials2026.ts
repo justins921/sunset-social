@@ -50,16 +50,15 @@ export const FIN_EXPENSE_2026: FinExpense[] = [
     description: "Golfers Outlet — door prizes",
     amount: 2404.5,
     checkNo: "CK#1335",
-    // Prize lineup from the banquet; enter each price from the receipt (the
-    // itemized subtotal should add up to the check total above).
+    // From the Golfers & Skiers Outlet receipt (subtotal $2,290 + 5% WI tax).
     items: [
-      { description: "TaylorMade SIM2 MAX Irons", amount: 0 },
-      { description: "TaylorMade Qi4D Adjustable Fairway 9 Wood", amount: 0 },
-      { description: "Titleist GT2 Adjustable Fairway 7 Wood", amount: 0 },
-      { description: "Titleist GT2 Adjustable Fairway 5 Wood", amount: 0 },
-      { description: "Vortex Blade Golf Rangefinder", amount: 0 },
-      { description: "Dozen Titleist Pro V1X (×10)", amount: 0 },
-      { description: "Sleeve of Titleist Pro V1X (×3)", amount: 0 },
+      { description: "Titleist Pro V1X — 10 dozen @ $44", amount: 440.0 },
+      { description: "Titleist Velocity — 13 dozen @ $20", amount: 260.0 },
+      { description: "Vortex Blade Rangefinder — 2 @ $150", amount: 300.0 },
+      { description: "Titleist GT2 Fairway 3 Wood — 2 @ $250", amount: 500.0 },
+      { description: "TaylorMade Qi4D Fairway 9 Wood", amount: 300.0 },
+      { description: "TaylorMade SIM2 MAX Iron Set", amount: 490.0 },
+      { description: "Wisconsin State Tax (5%)", amount: 114.5 },
     ],
   },
   { date: "2026-08-27", description: "Cash for League Award Winners", amount: 1687.0, checkNo: "CK#1336" },
