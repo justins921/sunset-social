@@ -351,7 +351,7 @@ async function syncExpenseItemsIfNeeded(sql: Sql): Promise<void> {
 // clobbers later manual edits.
 async function syncReceiptItemsV2(sql: Sql): Promise<void> {
   const done =
-    (await sql`select value from app_meta where key = 'fin_items_v2'`).length > 0;
+    (await sql`select value from app_meta where key = 'fin_items_v3'`).length > 0;
   if (done) return;
   for (const r of FIN_EXPENSE_2026) {
     if (!r.items) continue;
@@ -363,7 +363,7 @@ async function syncReceiptItemsV2(sql: Sql): Promise<void> {
       await insertExpenseItems(sql, match[0].id, r.items);
     }
   }
-  await sql`insert into app_meta (key, value) values ('fin_items_v2', '1')
+  await sql`insert into app_meta (key, value) values ('fin_items_v3', '1')
             on conflict (key) do nothing`;
 }
 
