@@ -82,9 +82,10 @@ export async function removeFinAction(formData: FormData) {
 export async function saveOfficersAction(formData: FormData) {
   if (!isAuthed()) redirect("/admin/login");
   await setOfficers(
-    String(formData.get("treasurer") ?? "").trim(),
-    String(formData.get("verifier1") ?? "").trim(),
-    String(formData.get("verifier2") ?? "").trim(),
+    [1, 2, 3].map((i) => ({
+      name: String(formData.get(`name${i}`) ?? "").trim(),
+      title: String(formData.get(`title${i}`) ?? "").trim(),
+    })),
   );
   refresh();
   redirect("/admin/treasury");

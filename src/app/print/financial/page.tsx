@@ -127,11 +127,7 @@ export default async function FinancialReport() {
 
         {/* Signatures */}
         <section className="mt-10 grid grid-cols-3 gap-6 text-center text-xs">
-          {[
-            { name: f.officers.treasurer, title: "Treasurer" },
-            { name: f.officers.verifier1, title: "" },
-            { name: f.officers.verifier2, title: "Vice President" },
-          ].map((o, i) => (
+          {f.officers.map((o, i) => (
             <div key={i}>
               <div className="mb-1 h-6 border-b border-slate-500" />
               <p className="font-medium">{o.name || " "}</p>

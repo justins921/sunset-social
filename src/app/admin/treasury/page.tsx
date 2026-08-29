@@ -150,10 +150,26 @@ export default async function TreasuryAdmin() {
         <h2 className="text-sm font-semibold uppercase tracking-widest text-sunset-300">
           Report signatures
         </h2>
-        <form action={saveOfficersAction} className="mt-3 flex flex-wrap items-end gap-2">
-          <input name="treasurer" defaultValue={f.officers.treasurer} placeholder="Treasurer" className={`${input} flex-1`} />
-          <input name="verifier1" defaultValue={f.officers.verifier1} placeholder="Verifier 1" className={`${input} flex-1`} />
-          <input name="verifier2" defaultValue={f.officers.verifier2} placeholder="Verifier 2 / VP" className={`${input} flex-1`} />
+        <p className="mt-1 text-xs text-slate-400">
+          The three names and titles printed on the Financial Report signature lines.
+        </p>
+        <form action={saveOfficersAction} className="mt-3 space-y-2">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex flex-wrap items-end gap-2">
+              <input
+                name={`name${i + 1}`}
+                defaultValue={f.officers[i]?.name ?? ""}
+                placeholder={`Officer ${i + 1} name`}
+                className={`${input} flex-1`}
+              />
+              <input
+                name={`title${i + 1}`}
+                defaultValue={f.officers[i]?.title ?? ""}
+                placeholder="Title (e.g. President)"
+                className={`${input} flex-1`}
+              />
+            </div>
+          ))}
           <button className="rounded-lg bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20">Save</button>
         </form>
       </section>

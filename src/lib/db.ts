@@ -6,7 +6,7 @@ import {
   FIN_INCOME_2026,
   FIN_EXPENSE_2026,
   FIN_FIFTY_2026,
-  FIN_OFFICERS_2026,
+  FIN_OFFICERS,
 } from "@/data/financials2026";
 
 // ---------------------------------------------------------------------------
@@ -224,6 +224,10 @@ async function doEnsure(): Promise<void> {
   // One-time load of the 2026 financial report (guarded by a marker so it never
   // reloads or overwrites treasurer edits).
   await loadFinancialsIfMissing(sql);
+
+  // One-time sync of the current officer slate. Independent of the financial
+  // load above so it also reaches a DB seeded before titles existed.
+  await syncOfficersIfNeeded(sql);
 }
 
 async function loadFinancialsIfMissing(sql: Sql): Promise<void> {
@@ -247,17 +251,31 @@ async function loadFinancialsIfMissing(sql: Sql): Promise<void> {
       for (const r of FIN_FIFTY_2026)
         await tx`insert into fin_5050 (occurred_on, winner, amount)
                  values (${r.date}, ${r.winner}, ${r.amount})`;
-      for (const [k, v] of Object.entries({
-        treasurer_name: FIN_OFFICERS_2026.treasurer,
-        verifier1_name: FIN_OFFICERS_2026.verifier1,
-        verifier2_name: FIN_OFFICERS_2026.verifier2,
-      }))
-        await tx`insert into app_meta (key, value) values (${k}, ${v})
-                 on conflict (key) do nothing`;
     });
   }
   await sql`insert into app_meta (key, value) values ('fin_2026_loaded', '1')
             on conflict (key) do nothing`;
+}
+
+// Writes the current officer slate (name + title) once, then marks itself done
+// so it never overwrites later admin edits. Runs on every deploy until the
+// marker is set, which is what upgrades a DB seeded before titles existed.
+async function syncOfficersIfNeeded(sql: Sql): Promise<void> {
+  const synced =
+    (await sql`select value from app_meta where key = 'officers_titled_loaded'`).length > 0;
+  if (synced) return;
+  for (const [k, v] of officerMeta())
+    await sql`insert into app_meta (key, value) values (${k}, ${v})
+              on conflict (key) do update set value = excluded.value`;
+  await sql`insert into app_meta (key, value) values ('officers_titled_loaded', '1')
+            on conflict (key) do nothing`;
+}
+
+function officerMeta(): [string, string][] {
+  return FIN_OFFICERS.flatMap((o, i) => [
+    [`officer${i + 1}_name`, o.name],
+    [`officer${i + 1}_title`, o.title],
+  ]) as [string, string][];
 }
 
 async function seedBase(sql: Sql): Promise<void> {

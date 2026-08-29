@@ -68,8 +68,11 @@ export const FIN_FIFTY_2026: FinFifty[] = [
   { date: "2026-08-20", amount: 125.0, winner: "Phil Levine $125" },
 ];
 
-export const FIN_OFFICERS_2026 = {
-  treasurer: "Peter D. Stueber",
-  verifier1: "Terry Schroeder",
-  verifier2: "Troy Ehnert",
-};
+// League officers shown on the Financial Report signature block. Each slot has
+// an editable name and title, so a future secretary can update the whole slate
+// from the admin Treasury page without code changes.
+export const FIN_OFFICERS = [
+  { name: "Mike D. Lloyd", title: "President" },
+  { name: "Andrew Gesell", title: "Vice President" },
+  { name: "Justin Sobojinski", title: "Secretary/Treasurer" },
+] as const;

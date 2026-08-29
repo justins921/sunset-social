@@ -1214,7 +1214,7 @@ export type Financials = {
   grandTotal: number;
   debitTotal: number;
   moneyOnHand: number;
-  officers: { treasurer: string; verifier1: string; verifier2: string };
+  officers: { name: string; title: string }[];
 };
 
 export async function getFinancials(): Promise<Financials | null> {
@@ -1233,8 +1233,8 @@ export async function getFinancials(): Promise<Financials | null> {
       select id, occurred_on::text as date, winner, amount::float8 as amount
       from fin_5050 order by occurred_on asc nulls last, id asc`,
     sql<{ key: string; value: string }[]>`
-      select key, value from app_meta
-      where key in ('treasurer_name', 'verifier1_name', 'verifier2_name')`,
+      select key, value from app_meta where key like 'officer%\_name' escape '\'
+         or key like 'officer%\_title' escape '\'`,
   ]);
   const m = new Map(meta.map((r) => [r.key, r.value]));
   const fiftyTotal = fifty.reduce((s, r) => s + r.amount, 0);
@@ -1250,11 +1250,10 @@ export async function getFinancials(): Promise<Financials | null> {
     grandTotal,
     debitTotal,
     moneyOnHand: grandTotal - debitTotal,
-    officers: {
-      treasurer: m.get("treasurer_name") ?? "",
-      verifier1: m.get("verifier1_name") ?? "",
-      verifier2: m.get("verifier2_name") ?? "",
-    },
+    officers: [1, 2, 3].map((i) => ({
+      name: m.get(`officer${i}_name`) ?? "",
+      title: m.get(`officer${i}_title`) ?? "",
+    })),
   };
 }
 
@@ -1286,14 +1285,16 @@ export async function removeFin(table: "income" | "expense" | "fifty", id: numbe
   else if (table === "expense") await sql`delete from fin_expense where id = ${id}`;
   else await sql`delete from fin_5050 where id = ${id}`;
 }
-export async function setOfficers(treasurer: string, verifier1: string, verifier2: string) {
+export async function setOfficers(officers: { name: string; title: string }[]) {
   const sql = await requireSql();
-  for (const [k, v] of [
-    ["treasurer_name", treasurer],
-    ["verifier1_name", verifier1],
-    ["verifier2_name", verifier2],
-  ] as const) {
-    await sql`insert into app_meta (key, value) values (${k}, ${v})
-              on conflict (key) do update set value = excluded.value`;
+  for (let i = 0; i < 3; i++) {
+    const o = officers[i] ?? { name: "", title: "" };
+    for (const [k, v] of [
+      [`officer${i + 1}_name`, o.name],
+      [`officer${i + 1}_title`, o.title],
+    ] as const) {
+      await sql`insert into app_meta (key, value) values (${k}, ${v})
+                on conflict (key) do update set value = excluded.value`;
+    }
   }
 }
