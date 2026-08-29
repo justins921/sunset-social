@@ -2,6 +2,12 @@ import "server-only";
 import postgres from "postgres";
 import { TEAMS, SCHEDULE, SUBS } from "@/data/league";
 import { SEASON_2026 } from "@/data/season2026";
+import {
+  FIN_INCOME_2026,
+  FIN_EXPENSE_2026,
+  FIN_FIFTY_2026,
+  FIN_OFFICERS_2026,
+} from "@/data/financials2026";
 
 // ---------------------------------------------------------------------------
 // Connection
@@ -180,6 +186,21 @@ async function doEnsure(): Promise<void> {
       champion text,
       data jsonb not null
     )`;
+  // Treasury / financial report ledgers (mirrors the treasurer's balance sheet).
+  await sql`
+    create table if not exists fin_income (
+      id serial primary key, occurred_on date, description text not null,
+      amount numeric not null, category text
+    )`;
+  await sql`
+    create table if not exists fin_expense (
+      id serial primary key, occurred_on date, description text not null,
+      amount numeric not null, check_no text
+    )`;
+  await sql`
+    create table if not exists fin_5050 (
+      id serial primary key, occurred_on date, winner text, amount numeric not null
+    )`;
 
   // Once initialized, the database is the source of truth for rosters/schedule,
   // so admin edits survive every redeploy.
@@ -199,6 +220,44 @@ async function doEnsure(): Promise<void> {
   // added to season2026.ts reach an already-live database on deploy — without
   // ever touching a week that already has loaded or admin-entered results.
   await loadMissingSeasonWeeks(sql);
+
+  // One-time load of the 2026 financial report (guarded by a marker so it never
+  // reloads or overwrites treasurer edits).
+  await loadFinancialsIfMissing(sql);
+}
+
+async function loadFinancialsIfMissing(sql: Sql): Promise<void> {
+  const marked =
+    (await sql`select value from app_meta where key = 'fin_2026_loaded'`).length > 0;
+  if (marked) return;
+  const [{ n }] = await sql<{ n: number }[]>`
+    select (
+      (select count(*) from fin_income) +
+      (select count(*) from fin_expense) +
+      (select count(*) from fin_5050)
+    )::int as n`;
+  if (n === 0) {
+    await sql.begin(async (tx) => {
+      for (const r of FIN_INCOME_2026)
+        await tx`insert into fin_income (occurred_on, description, amount, category)
+                 values (${r.date}, ${r.description}, ${r.amount}, ${r.category})`;
+      for (const r of FIN_EXPENSE_2026)
+        await tx`insert into fin_expense (occurred_on, description, amount, check_no)
+                 values (${r.date}, ${r.description}, ${r.amount}, ${r.checkNo})`;
+      for (const r of FIN_FIFTY_2026)
+        await tx`insert into fin_5050 (occurred_on, winner, amount)
+                 values (${r.date}, ${r.winner}, ${r.amount})`;
+      for (const [k, v] of Object.entries({
+        treasurer_name: FIN_OFFICERS_2026.treasurer,
+        verifier1_name: FIN_OFFICERS_2026.verifier1,
+        verifier2_name: FIN_OFFICERS_2026.verifier2,
+      }))
+        await tx`insert into app_meta (key, value) values (${k}, ${v})
+                 on conflict (key) do nothing`;
+    });
+  }
+  await sql`insert into app_meta (key, value) values ('fin_2026_loaded', '1')
+            on conflict (key) do nothing`;
 }
 
 async function seedBase(sql: Sql): Promise<void> {

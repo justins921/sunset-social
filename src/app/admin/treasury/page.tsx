@@ -2,8 +2,14 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { adminConfigured, isAuthed } from "@/lib/auth";
 import { hasDb } from "@/lib/db";
-import { getTreasury } from "@/lib/queries";
-import { toggleDuesAction, addTxnAction, removeTxnAction } from "./actions";
+import { getFinancials } from "@/lib/queries";
+import {
+  addIncomeAction,
+  addExpenseAction,
+  addFiftyAction,
+  removeFinAction,
+  saveOfficersAction,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Treasury" };
@@ -11,151 +17,151 @@ export const metadata = { title: "Treasury" };
 const money = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
+const input =
+  "rounded-lg border border-white/10 bg-dusk-950 px-3 py-2 text-white outline-none focus:border-sunset-400";
+
+function RemoveBtn({ table, id }: { table: string; id: number }) {
+  return (
+    <form action={removeFinAction}>
+      <input type="hidden" name="table" value={table} />
+      <input type="hidden" name="id" value={id} />
+      <button className="text-xs text-slate-500 hover:text-red-300">✕</button>
+    </form>
+  );
+}
+
 export default async function TreasuryAdmin() {
   if (!adminConfigured() || !isAuthed()) redirect("/admin/login");
   if (!hasDb()) redirect("/admin");
-  const t = await getTreasury();
-  if (!t) redirect("/admin");
-
-  const input =
-    "rounded-lg border border-white/10 bg-dusk-950 px-3 py-2 text-white outline-none focus:border-sunset-400";
-  const paidCount = t.dues.filter((d) => d.paid).length;
+  const f = await getFinancials();
+  if (!f) redirect("/admin");
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-      <Link href="/admin" className="text-sm text-slate-400 hover:text-sunset-300">
-        ← Admin
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link href="/admin" className="text-sm text-slate-400 hover:text-sunset-300">
+          ← Admin
+        </Link>
+        <Link
+          href="/print/financial"
+          className="rounded-lg bg-sunset-500 px-4 py-2 text-sm font-semibold text-white hover:bg-sunset-600"
+        >
+          Financial Report →
+        </Link>
+      </div>
       <h1 className="mt-3 text-2xl font-bold tracking-tight">Treasury</h1>
 
       {/* Summary */}
-      <div className="mt-6 grid gap-3 sm:grid-cols-4">
+      <div className="mt-5 grid gap-3 sm:grid-cols-5">
         {[
-          { label: "Balance", value: money(t.balance), accent: true },
-          { label: "Dues collected", value: money(t.duesCollected) },
-          { label: "Other income", value: money(t.otherIncome) },
-          { label: "Expenses", value: money(t.expenses) },
+          { label: "50/50 total", value: money(f.fiftyTotal) },
+          { label: "Income", value: money(f.incomeTotal) },
+          { label: "Grand total", value: money(f.grandTotal) },
+          { label: "Debit total", value: money(f.debitTotal) },
+          { label: "Money on hand", value: money(f.moneyOnHand), accent: true },
         ].map((c) => (
-          <div key={c.label} className="rounded-2xl border border-white/10 bg-dusk-800/40 p-4">
-            <p className="text-xs uppercase tracking-widest text-slate-400">{c.label}</p>
-            <p className={`mt-1 text-xl font-semibold ${c.accent ? "text-sunset-200" : "text-white"}`}>
+          <div key={c.label} className="rounded-2xl border border-white/10 bg-dusk-800/40 p-3">
+            <p className="text-[11px] uppercase tracking-widest text-slate-400">{c.label}</p>
+            <p className={`mt-1 text-lg font-semibold ${c.accent ? "text-sunset-200" : "text-white"}`}>
               {c.value}
             </p>
           </div>
         ))}
       </div>
 
-      {/* Dues */}
-      <div className="mt-10">
-        <div className="flex items-end justify-between">
-          <h2 className="text-lg font-semibold">Dues ({money(t.memberFee)} / member)</h2>
-          <p className="text-sm text-slate-400">
-            {paidCount}/{t.dues.length} paid · {money(t.duesOutstanding)} outstanding
-          </p>
-        </div>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {t.dues.map((d) => (
-            <form
-              key={d.playerId}
-              action={toggleDuesAction}
-              className={`flex items-center justify-between rounded-xl border px-4 py-2.5 ${
-                d.paid
-                  ? "border-fairway-500/40 bg-fairway-500/10"
-                  : "border-white/10 bg-dusk-800/40"
-              }`}
-            >
-              <input type="hidden" name="playerId" value={d.playerId} />
-              <input type="hidden" name="paid" value={d.paid ? "0" : "1"} />
-              <span>
-                <span className="font-medium">{d.name}</span>
-                <span className="ml-2 text-xs text-slate-500">{d.teamName}</span>
-              </span>
-              <button
-                className={`rounded-lg px-3 py-1 text-xs font-semibold ${
-                  d.paid
-                    ? "bg-fairway-500/20 text-fairway-400"
-                    : "bg-white/10 text-slate-200 hover:bg-white/20"
-                }`}
-              >
-                {d.paid ? "Paid ✓" : "Mark paid"}
-              </button>
-            </form>
-          ))}
-        </div>
+      <div className="mt-8 grid gap-8 lg:grid-cols-2">
+        {/* Income */}
+        <section>
+          <h2 className="text-lg font-semibold">Income</h2>
+          <form action={addIncomeAction} className="mt-2 flex flex-wrap items-end gap-2">
+            <input type="date" name="date" className={`${input} w-36`} />
+            <input name="description" placeholder="Description" className={`${input} flex-1`} />
+            <select name="category" defaultValue="dues" className={input}>
+              <option value="banquet">Banquet</option>
+              <option value="dues">Dues</option>
+              <option value="fnr">FNR</option>
+              <option value="other">Other</option>
+            </select>
+            <input name="amount" placeholder="$" inputMode="decimal" className={`${input} w-24`} />
+            <button className="rounded-lg bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/20">Add</button>
+          </form>
+          <ul className="mt-3 divide-y divide-white/5 text-sm">
+            {f.income.map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-2 py-2">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate">{r.description}</span>
+                  {r.category && <span className="text-xs text-slate-500">{r.category}</span>}
+                </span>
+                <span className="font-mono text-fairway-400">{money(r.amount)}</span>
+                <RemoveBtn table="income" id={r.id} />
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Expenses */}
+        <section>
+          <h2 className="text-lg font-semibold">Expenses / Purchases</h2>
+          <form action={addExpenseAction} className="mt-2 flex flex-wrap items-end gap-2">
+            <input type="date" name="date" className={`${input} w-36`} />
+            <input name="description" placeholder="Description" className={`${input} flex-1`} />
+            <input name="checkNo" placeholder="CK#" className={`${input} w-24`} />
+            <input name="amount" placeholder="$" inputMode="decimal" className={`${input} w-24`} />
+            <button className="rounded-lg bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/20">Add</button>
+          </form>
+          <ul className="mt-3 divide-y divide-white/5 text-sm">
+            {f.expenses.map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-2 py-2">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate">{r.description}</span>
+                  {r.checkNo && <span className="text-xs text-slate-500">{r.checkNo}</span>}
+                </span>
+                <span className="font-mono text-red-300">{money(r.amount)}</span>
+                <RemoveBtn table="expense" id={r.id} />
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
 
-      {/* Ledger */}
-      <div className="mt-10">
-        <h2 className="text-lg font-semibold">Ledger</h2>
-        <form action={addTxnAction} className="mt-3 flex flex-wrap items-end gap-2">
-          <input type="date" name="occurredOn" className={`${input} w-40`} />
-          <input name="description" placeholder="Description" className={`${input} flex-1`} />
-          <select name="kind" className={input} defaultValue="expense">
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-          </select>
-          <input
-            name="amount"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Amount"
-            className={`${input} w-28`}
-          />
-          <button className="rounded-lg bg-sunset-500 px-4 py-2 text-sm font-semibold text-white hover:bg-sunset-600">
-            Add
-          </button>
+      {/* 50/50 */}
+      <section className="mt-8">
+        <h2 className="text-lg font-semibold">50/50 log</h2>
+        <form action={addFiftyAction} className="mt-2 flex flex-wrap items-end gap-2">
+          <input type="date" name="date" className={`${input} w-36`} />
+          <input name="winner" placeholder="Winner(s)" className={`${input} flex-1`} />
+          <input name="amount" placeholder="$" inputMode="decimal" className={`${input} w-24`} />
+          <button className="rounded-lg bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/20">Add</button>
         </form>
+        <ul className="mt-3 grid gap-x-6 sm:grid-cols-2">
+          {f.fifty.map((r) => (
+            <li key={r.id} className="flex items-center justify-between gap-2 border-b border-white/5 py-1.5 text-sm">
+              <span className="text-slate-400">{r.date}</span>
+              <span className="min-w-0 flex-1 truncate">{r.winner}</span>
+              <span className="font-mono">{money(r.amount)}</span>
+              <RemoveBtn table="fifty" id={r.id} />
+            </li>
+          ))}
+        </ul>
+      </section>
 
-        <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
-          <table className="w-full text-sm">
-            <thead className="bg-white/5 text-left text-xs uppercase tracking-wider text-slate-400">
-              <tr>
-                <th className="px-4 py-2">Date</th>
-                <th className="px-4 py-2">Description</th>
-                <th className="px-4 py-2 text-right">Amount</th>
-                <th className="px-4 py-2"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {t.transactions.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-4 text-center text-slate-500">
-                    No entries yet.
-                  </td>
-                </tr>
-              ) : (
-                t.transactions.map((x) => (
-                  <tr key={x.id}>
-                    <td className="px-4 py-2 text-slate-400">{x.occurredOn}</td>
-                    <td className="px-4 py-2">{x.description}</td>
-                    <td
-                      className={`px-4 py-2 text-right font-mono ${
-                        x.kind === "income" ? "text-fairway-400" : "text-red-300"
-                      }`}
-                    >
-                      {x.kind === "income" ? "+" : "−"}
-                      {money(x.amount)}
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      <form action={removeTxnAction}>
-                        <input type="hidden" name="id" value={x.id} />
-                        <button className="text-xs text-slate-500 hover:text-red-300">
-                          Remove
-                        </button>
-                      </form>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-4 text-xs text-slate-500">
-          Balance = dues collected + other income − expenses. Use this as the
-          post-banquet treasury report.
-        </p>
-      </div>
+      {/* Officers */}
+      <section className="mt-10 rounded-2xl border border-white/10 bg-dusk-800/40 p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-sunset-300">
+          Report signatures
+        </h2>
+        <form action={saveOfficersAction} className="mt-3 flex flex-wrap items-end gap-2">
+          <input name="treasurer" defaultValue={f.officers.treasurer} placeholder="Treasurer" className={`${input} flex-1`} />
+          <input name="verifier1" defaultValue={f.officers.verifier1} placeholder="Verifier 1" className={`${input} flex-1`} />
+          <input name="verifier2" defaultValue={f.officers.verifier2} placeholder="Verifier 2 / VP" className={`${input} flex-1`} />
+          <button className="rounded-lg bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20">Save</button>
+        </form>
+      </section>
+
+      <p className="mt-6 text-xs text-slate-500">
+        Grand total = income + 50/50. Money on hand = grand total − debit total.
+        Enter dues as income lines. Use <span className="text-slate-300">Financial Report</span> to print/email the balance sheet.
+      </p>
     </div>
   );
 }

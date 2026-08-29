@@ -892,10 +892,11 @@ export async function archiveCurrentSeason(label: string): Promise<number> {
     results,
     teamResults,
     recaps,
-    dues,
-    transactions,
     meetings,
     attendance,
+    finIncome,
+    finExpense,
+    finFifty,
     standings,
   ] = await Promise.all([
     sql`select * from teams order by sort, id`,
@@ -904,10 +905,11 @@ export async function archiveCurrentSeason(label: string): Promise<number> {
     sql`select * from results`,
     sql`select * from team_results`,
     sql`select * from recaps`,
-    sql`select player_id, paid, amount, paid_on::text as paid_on from dues`,
-    sql`select id, occurred_on::text as occurred_on, description, amount, kind from transactions`,
     sql`select id, meeting_date::text as meeting_date, title, notes from meetings order by meeting_date`,
     sql`select * from meeting_attendance`,
+    sql`select id, occurred_on::text as occurred_on, description, amount, category from fin_income order by id`,
+    sql`select id, occurred_on::text as occurred_on, description, amount, check_no from fin_expense order by id`,
+    sql`select id, occurred_on::text as occurred_on, winner, amount from fin_5050 order by id`,
     getTeamStandings(),
   ]);
   const champion = standings[0]?.name ?? null;
@@ -918,10 +920,11 @@ export async function archiveCurrentSeason(label: string): Promise<number> {
     results,
     teamResults,
     recaps,
-    dues,
-    transactions,
     meetings,
     attendance,
+    finIncome,
+    finExpense,
+    finFifty,
     standings,
   };
   const [row] = await sql<{ id: number }[]>`
@@ -943,9 +946,12 @@ export async function startNewSeason(label: string): Promise<void> {
     await tx`delete from results`;
     await tx`delete from team_results`;
     await tx`delete from recaps`;
+    await tx`delete from meetings`; // attendance cascades
+    await tx`delete from fin_income`;
+    await tx`delete from fin_expense`;
+    await tx`delete from fin_5050`;
     await tx`delete from dues`;
     await tx`delete from transactions`;
-    await tx`delete from meetings`; // attendance cascades
   });
 }
 
@@ -1173,4 +1179,121 @@ export async function removeTransaction(id: number): Promise<void> {
   if (!sql) throw new Error("No database configured");
   await ensureSchema();
   await sql`delete from transactions where id = ${id}`;
+}
+
+// ---------------------------------------------------------------------------
+// Financial report (treasurer's balance sheet)
+// ---------------------------------------------------------------------------
+
+export type FinIncomeRow = {
+  id: number;
+  date: string | null;
+  description: string;
+  amount: number;
+  category: string | null;
+};
+export type FinExpenseRow = {
+  id: number;
+  date: string | null;
+  description: string;
+  amount: number;
+  checkNo: string | null;
+};
+export type FinFiftyRow = {
+  id: number;
+  date: string | null;
+  winner: string | null;
+  amount: number;
+};
+export type Financials = {
+  income: FinIncomeRow[];
+  expenses: FinExpenseRow[];
+  fifty: FinFiftyRow[];
+  fiftyTotal: number;
+  incomeTotal: number;
+  grandTotal: number;
+  debitTotal: number;
+  moneyOnHand: number;
+  officers: { treasurer: string; verifier1: string; verifier2: string };
+};
+
+export async function getFinancials(): Promise<Financials | null> {
+  noStore();
+  const sql = getSql();
+  if (!sql) return null;
+  await ensureSchema();
+  const [income, expenses, fifty, meta] = await Promise.all([
+    sql<FinIncomeRow[]>`
+      select id, occurred_on::text as date, description, amount::float8 as amount, category
+      from fin_income order by occurred_on asc nulls last, id asc`,
+    sql<FinExpenseRow[]>`
+      select id, occurred_on::text as date, description, amount::float8 as amount, check_no as "checkNo"
+      from fin_expense order by occurred_on asc nulls last, id asc`,
+    sql<FinFiftyRow[]>`
+      select id, occurred_on::text as date, winner, amount::float8 as amount
+      from fin_5050 order by occurred_on asc nulls last, id asc`,
+    sql<{ key: string; value: string }[]>`
+      select key, value from app_meta
+      where key in ('treasurer_name', 'verifier1_name', 'verifier2_name')`,
+  ]);
+  const m = new Map(meta.map((r) => [r.key, r.value]));
+  const fiftyTotal = fifty.reduce((s, r) => s + r.amount, 0);
+  const incomeTotal = income.reduce((s, r) => s + r.amount, 0);
+  const debitTotal = expenses.reduce((s, r) => s + r.amount, 0);
+  const grandTotal = incomeTotal + fiftyTotal;
+  return {
+    income,
+    expenses,
+    fifty,
+    fiftyTotal,
+    incomeTotal,
+    grandTotal,
+    debitTotal,
+    moneyOnHand: grandTotal - debitTotal,
+    officers: {
+      treasurer: m.get("treasurer_name") ?? "",
+      verifier1: m.get("verifier1_name") ?? "",
+      verifier2: m.get("verifier2_name") ?? "",
+    },
+  };
+}
+
+async function requireSql(): Promise<Sql> {
+  const sql = getSql();
+  if (!sql) throw new Error("No database configured");
+  await ensureSchema();
+  return sql;
+}
+
+export async function addIncome(date: string | null, description: string, amount: number, category: string) {
+  const sql = await requireSql();
+  await sql`insert into fin_income (occurred_on, description, amount, category)
+            values (${date}, ${description}, ${amount}, ${category})`;
+}
+export async function addExpense(date: string | null, description: string, amount: number, checkNo: string | null) {
+  const sql = await requireSql();
+  await sql`insert into fin_expense (occurred_on, description, amount, check_no)
+            values (${date}, ${description}, ${amount}, ${checkNo})`;
+}
+export async function addFifty(date: string | null, winner: string, amount: number) {
+  const sql = await requireSql();
+  await sql`insert into fin_5050 (occurred_on, winner, amount)
+            values (${date}, ${winner}, ${amount})`;
+}
+export async function removeFin(table: "income" | "expense" | "fifty", id: number) {
+  const sql = await requireSql();
+  if (table === "income") await sql`delete from fin_income where id = ${id}`;
+  else if (table === "expense") await sql`delete from fin_expense where id = ${id}`;
+  else await sql`delete from fin_5050 where id = ${id}`;
+}
+export async function setOfficers(treasurer: string, verifier1: string, verifier2: string) {
+  const sql = await requireSql();
+  for (const [k, v] of [
+    ["treasurer_name", treasurer],
+    ["verifier1_name", verifier1],
+    ["verifier2_name", verifier2],
+  ] as const) {
+    await sql`insert into app_meta (key, value) values (${k}, ${v})
+              on conflict (key) do update set value = excluded.value`;
+  }
 }
