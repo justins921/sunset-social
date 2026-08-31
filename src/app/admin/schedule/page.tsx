@@ -23,17 +23,17 @@ export default async function ScheduleAdmin({
 
   const weeks = await getSchedule();
   const input =
-    "rounded-lg border border-white/10 bg-dusk-950 px-3 py-2 text-white outline-none focus:border-sunset-400";
+    "rounded-lg border border-line bg-page px-3 py-2 text-ink outline-none focus:border-sunset-400";
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <Link href="/admin" className="text-sm text-slate-400 hover:text-sunset-300">
+      <Link href="/admin" className="text-sm text-ink2 hover:text-accent">
         ← Admin
       </Link>
       <h1 className="mt-3 text-2xl font-bold tracking-tight">Schedule</h1>
-      <p className="mt-1 text-sm text-slate-400">
+      <p className="mt-1 text-sm text-ink2">
         Set each week&apos;s date, label, note, and matchups (one per line, e.g.{" "}
-        <code className="rounded bg-white/10 px-1">10 v 1</code>). A week with a note
+        <code className="rounded bg-surface2 px-1">10 v 1</code>). A week with a note
         (fun night, position round, banquet) is treated as a non-playing week.
       </p>
 
@@ -47,12 +47,12 @@ export default async function ScheduleAdmin({
 
       <div className="mt-4 flex flex-wrap gap-2">
         <form action={generateAction}>
-          <button className="rounded-lg bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20">
+          <button className="rounded-lg bg-surface2 px-4 py-2 text-sm text-ink hover:bg-surface2">
             Generate round-robin
           </button>
         </form>
         <form action={addWeekAction}>
-          <button className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-white/5">
+          <button className="rounded-lg border border-line px-4 py-2 text-sm text-ink2 hover:bg-surface2">
             + Add week
           </button>
         </form>
@@ -63,7 +63,7 @@ export default async function ScheduleAdmin({
           <form
             key={w.id}
             action={saveWeekAction}
-            className="rounded-2xl border border-white/10 bg-dusk-800/40 p-4"
+            className="rounded-2xl border border-line bg-surface/40 p-4"
           >
             <input type="hidden" name="id" value={w.id} />
             <div className="flex flex-wrap gap-2">
@@ -95,7 +95,7 @@ export default async function ScheduleAdmin({
                 className={`${input} flex-1 font-mono text-sm`}
               />
               <div className="flex flex-col gap-2">
-                <button className="rounded-lg bg-sunset-500 px-4 py-2 text-sm font-semibold text-white hover:bg-sunset-600">
+                <button className="rounded-lg bg-sunset-500 px-4 py-2 text-sm font-semibold text-ink hover:bg-sunset-600">
                   Save
                 </button>
               </div>

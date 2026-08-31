@@ -4,6 +4,56 @@
 
 :root {
   --font-inter: "Inter", system-ui, sans-serif;
+
+  /* Light theme (default fallback). Values are "R G B" for alpha support. */
+  --page: 247 245 240;
+  --surface: 255 255 255;
+  --surface2: 238 234 226;
+  --line: 214 208 196;
+  --ink: 32 24 48;
+  --ink2: 90 84 112;
+  --ink3: 139 133 152;
+  --accent: 199 45 7;
+  color-scheme: light;
+}
+
+/* Follow the OS when the user hasn't picked a theme. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: 18 13 32;
+    --surface: 30 22 54;
+    --surface2: 42 33 68;
+    --line: 50 42 77;
+    --ink: 241 240 246;
+    --ink2: 183 178 198;
+    --ink3: 133 127 152;
+    --accent: 255 154 92;
+    color-scheme: dark;
+  }
+}
+
+/* Explicit user choice always wins. */
+:root[data-theme="dark"] {
+  --page: 18 13 32;
+  --surface: 30 22 54;
+  --surface2: 42 33 68;
+  --line: 50 42 77;
+  --ink: 241 240 246;
+  --ink2: 183 178 198;
+  --ink3: 133 127 152;
+  --accent: 255 154 92;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --page: 247 245 240;
+  --surface: 255 255 255;
+  --surface2: 238 234 226;
+  --line: 214 208 196;
+  --ink: 32 24 48;
+  --ink2: 90 84 112;
+  --ink3: 139 133 152;
+  --accent: 199 45 7;
+  color-scheme: light;
 }
 
 html {
@@ -11,7 +61,7 @@ html {
 }
 
 body {
-  @apply bg-dusk-950 text-slate-100 antialiased;
+  @apply bg-page text-ink antialiased;
 }
 
 /* Thin scrollbars for horizontally scrolling tables */

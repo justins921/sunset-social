@@ -26,11 +26,11 @@ export default async function MeetingEdit({
   const quorumNeeded = Math.ceil(m.memberCount / 2);
   const hasQuorum = m.present >= quorumNeeded;
   const input =
-    "rounded-lg border border-white/10 bg-dusk-950 px-3 py-2 text-white outline-none focus:border-sunset-400";
+    "rounded-lg border border-line bg-page px-3 py-2 text-ink outline-none focus:border-sunset-400";
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <Link href="/admin/minutes" className="text-sm text-slate-400 hover:text-sunset-300">
+      <Link href="/admin/minutes" className="text-sm text-ink2 hover:text-accent">
         ← All meetings
       </Link>
 
@@ -67,7 +67,7 @@ export default async function MeetingEdit({
               className={`rounded-full px-3 py-1 text-xs font-medium ${
                 hasQuorum
                   ? "bg-fairway-500/20 text-fairway-400"
-                  : "bg-white/10 text-slate-300"
+                  : "bg-surface2 text-ink2"
               }`}
             >
               {m.present}/{m.memberCount} present · quorum {quorumNeeded}{" "}
@@ -76,7 +76,7 @@ export default async function MeetingEdit({
           </div>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             {m.roster.map((t) => (
-              <div key={t.id} className="rounded-xl border border-white/10 bg-dusk-800/40 p-3">
+              <div key={t.id} className="rounded-xl border border-line bg-surface/40 p-3">
                 <p className="mb-2 text-sm font-semibold">{t.name}</p>
                 <div className="space-y-1.5">
                   {t.players.map((p) => (
@@ -86,7 +86,7 @@ export default async function MeetingEdit({
                         name="present"
                         value={p.id}
                         defaultChecked={present.has(p.id)}
-                        className="h-4 w-4 rounded border-white/20 bg-dusk-950"
+                        className="h-4 w-4 rounded border-line bg-page"
                       />
                       {p.name}
                     </label>
@@ -97,14 +97,14 @@ export default async function MeetingEdit({
           </div>
         </div>
 
-        <div className="sticky bottom-4 mt-6 flex items-center justify-between rounded-xl border border-white/10 bg-dusk-900/90 px-4 py-3 backdrop-blur">
+        <div className="sticky bottom-4 mt-6 flex items-center justify-between rounded-xl border border-line bg-surface/90 px-4 py-3 backdrop-blur">
           <button
             formAction={deleteMeetingAction}
             className="rounded-lg border border-red-500/30 px-3 py-2 text-sm text-red-200 hover:bg-red-500/10"
           >
             Delete meeting
           </button>
-          <button className="rounded-lg bg-sunset-500 px-5 py-2.5 font-semibold text-white hover:bg-sunset-600">
+          <button className="rounded-lg bg-sunset-500 px-5 py-2.5 font-semibold text-ink hover:bg-sunset-600">
             Save meeting
           </button>
         </div>

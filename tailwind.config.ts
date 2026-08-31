@@ -1,12 +1,26 @@
 import type { Config } from "tailwindcss";
 
+const withAlpha = (v: string) => `rgb(var(${v}) / <alpha-value>)`;
+
 const config: Config = {
   content: [
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  darkMode: ["selector", '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
+        // Theme-aware semantic tokens (flip between light and dark via CSS vars).
+        page: withAlpha("--page"),
+        surface: withAlpha("--surface"),
+        surface2: withAlpha("--surface2"),
+        line: withAlpha("--line"),
+        ink: withAlpha("--ink"),
+        ink2: withAlpha("--ink2"),
+        ink3: withAlpha("--ink3"),
+        // Accent text that stays legible in both themes (light orange on dark,
+        // deep orange on light).
+        accent: withAlpha("--accent"),
         sunset: {
           50: "#fff5ed",
           100: "#ffe8d4",

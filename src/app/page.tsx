@@ -43,7 +43,7 @@ export default async function HomePage() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sunset-100/90">
             {LEAGUE.course} · Est. league play
           </p>
-          <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-6xl">
+          <h1 className="mt-3 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-white sm:text-6xl">
             {LEAGUE.name}
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-sunset-50/90">
@@ -59,7 +59,7 @@ export default async function HomePage() {
             </Link>
             <Link
               href="/schedule"
-              className="rounded-full border border-white/40 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+              className="rounded-full border border-white/50 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               See the schedule
             </Link>
@@ -70,37 +70,37 @@ export default async function HomePage() {
       {/* Quick facts */}
       <section className="mx-auto -mt-8 max-w-6xl px-4 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-dusk-800/60 p-5 backdrop-blur">
-            <p className="text-xs uppercase tracking-widest text-slate-400">
+          <div className="rounded-2xl border border-line bg-surface/60 p-5 backdrop-blur">
+            <p className="text-xs uppercase tracking-widest text-ink2">
               Current leader
             </p>
-            <p className="mt-1 text-xl font-semibold text-white">{leader.name}</p>
-            <p className="text-sunset-300">{leader.points.toFixed(1)} pts</p>
+            <p className="mt-1 text-xl font-semibold text-ink">{leader.name}</p>
+            <p className="text-accent">{leader.points.toFixed(1)} pts</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-dusk-800/60 p-5 backdrop-blur">
-            <p className="text-xs uppercase tracking-widest text-slate-400">
+          <div className="rounded-2xl border border-line bg-surface/60 p-5 backdrop-blur">
+            <p className="text-xs uppercase tracking-widest text-ink2">
               {meta.complete ? "Season complete" : "Next on the tee"}
             </p>
             {meta.complete ? (
               <>
-                <p className="mt-1 text-xl font-semibold text-white">That&apos;s a wrap</p>
-                <p className="text-slate-300">
+                <p className="mt-1 text-xl font-semibold text-ink">That&apos;s a wrap</p>
+                <p className="text-ink2">
                   Banquet done · spring meeting {springMeeting}
                 </p>
               </>
             ) : (
               <>
-                <p className="mt-1 text-xl font-semibold text-white">{week.label}</p>
-                <p className="text-slate-300">{week.note ?? "League match play"}</p>
+                <p className="mt-1 text-xl font-semibold text-ink">{week.label}</p>
+                <p className="text-ink2">{week.note ?? "League match play"}</p>
               </>
             )}
           </div>
-          <div className="rounded-2xl border border-white/10 bg-dusk-800/60 p-5 backdrop-blur">
-            <p className="text-xs uppercase tracking-widest text-slate-400">
+          <div className="rounded-2xl border border-line bg-surface/60 p-5 backdrop-blur">
+            <p className="text-xs uppercase tracking-widest text-ink2">
               {meta.complete ? "Final standings" : "Standings as of"}
             </p>
-            <p className="mt-1 text-xl font-semibold text-white">{meta.asOf}</p>
-            <p className="text-slate-300">
+            <p className="mt-1 text-xl font-semibold text-ink">{meta.asOf}</p>
+            <p className="text-ink2">
               {meta.complete ? `Final ${LEAGUE.season} results` : "Updated weekly"}
             </p>
           </div>
@@ -114,13 +114,13 @@ export default async function HomePage() {
           <div className="lg:col-span-2">
             <div className="mb-4 flex items-end justify-between">
               <h2 className="text-2xl font-bold tracking-tight">Team standings</h2>
-              <Link href="/standings" className="text-sm text-sunset-300 hover:underline">
+              <Link href="/standings" className="text-sm text-accent hover:underline">
                 Full standings →
               </Link>
             </div>
-            <div className="overflow-hidden rounded-2xl border border-white/10">
+            <div className="overflow-hidden rounded-2xl border border-line">
               <table className="w-full text-sm">
-                <thead className="bg-white/5 text-left text-xs uppercase tracking-wider text-slate-400">
+                <thead className="bg-surface2 text-left text-xs uppercase tracking-wider text-ink2">
                   <tr>
                     <th className="px-4 py-3">#</th>
                     <th className="px-4 py-3">Team</th>
@@ -128,19 +128,19 @@ export default async function HomePage() {
                     <th className="px-4 py-3 text-right">Points</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-line">
                   {teams.map((t) => (
-                    <tr key={t.id} className="hover:bg-white/5">
-                      <td className="px-4 py-3 font-mono text-slate-400">{t.place}</td>
+                    <tr key={t.id} className="hover:bg-surface2">
+                      <td className="px-4 py-3 font-mono text-ink2">{t.place}</td>
                       <td className="px-4 py-3 font-semibold">
-                        <Link href={`/teams#team-${t.id}`} className="hover:text-sunset-300">
+                        <Link href={`/teams#team-${t.id}`} className="hover:text-accent">
                           {t.name}
                         </Link>
                       </td>
-                      <td className="hidden px-4 py-3 text-slate-400 sm:table-cell">
+                      <td className="hidden px-4 py-3 text-ink2 sm:table-cell">
                         {t.players.map((p) => p.name.split(" ").slice(-1)[0]).join(", ")}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono font-semibold text-sunset-200">
+                      <td className="px-4 py-3 text-right font-mono font-semibold text-accent">
                         {t.points.toFixed(1)}
                       </td>
                     </tr>
@@ -155,7 +155,7 @@ export default async function HomePage() {
             <div>
               <div className="mb-4 flex items-end justify-between">
                 <h2 className="text-2xl font-bold tracking-tight">Points leaders</h2>
-                <Link href="/standings#individual" className="text-sm text-sunset-300 hover:underline">
+                <Link href="/standings#individual" className="text-sm text-accent hover:underline">
                   All →
                 </Link>
               </div>
@@ -163,16 +163,16 @@ export default async function HomePage() {
                 {topPlayers.map((p) => (
                   <li
                     key={`${p.teamId}-${p.name}`}
-                    className="flex items-center justify-between rounded-xl border border-white/10 bg-dusk-800/40 px-4 py-2.5"
+                    className="flex items-center justify-between rounded-xl border border-line bg-surface/40 px-4 py-2.5"
                   >
                     <span className="flex items-center gap-3">
-                      <span className="w-5 font-mono text-slate-500">{p.place}</span>
+                      <span className="w-5 font-mono text-ink3">{p.place}</span>
                       <span>
                         <span className="font-medium">{p.name}</span>
-                        <span className="ml-2 text-xs text-slate-500">{p.teamName}</span>
+                        <span className="ml-2 text-xs text-ink3">{p.teamName}</span>
                       </span>
                     </span>
-                    <span className="font-mono font-semibold text-sunset-200">
+                    <span className="font-mono font-semibold text-accent">
                       {(p.points ?? 0).toFixed(1)}
                     </span>
                   </li>
@@ -181,21 +181,21 @@ export default async function HomePage() {
             </div>
 
             {latestRecap && (
-              <div className="rounded-2xl border border-white/10 bg-dusk-800/40 p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-widest text-sunset-300">
+              <div className="rounded-2xl border border-line bg-surface/40 p-5">
+                <h3 className="text-sm font-semibold uppercase tracking-widest text-accent">
                   Latest recap · {latestRecap.label}
                 </h3>
                 <dl className="mt-3 space-y-3 text-sm">
                   {latestRecap.lowScores && (
                     <div>
-                      <dt className="text-slate-400">Low scores</dt>
-                      <dd className="text-slate-100">{latestRecap.lowScores}</dd>
+                      <dt className="text-ink2">Low scores</dt>
+                      <dd className="text-ink">{latestRecap.lowScores}</dd>
                     </div>
                   )}
                   {latestRecap.fiftyFifty && (
                     <div>
-                      <dt className="text-slate-400">50/50 winner</dt>
-                      <dd className="text-slate-100">{latestRecap.fiftyFifty}</dd>
+                      <dt className="text-ink2">50/50 winner</dt>
+                      <dd className="text-ink">{latestRecap.fiftyFifty}</dd>
                     </div>
                   )}
                 </dl>
@@ -206,20 +206,20 @@ export default async function HomePage() {
       </section>
 
       {/* Sub list strip */}
-      <section className="border-t border-white/10 bg-dusk-900/40">
+      <section className="border-t border-line bg-surface2/50">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
           <h2 className="text-lg font-semibold">Substitutes</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-ink2">
             Need a fill-in? Any of these golfers can sub.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             {SUBS.map((s) => (
               <span
                 key={s.name}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-200"
+                className="rounded-full border border-line bg-surface2 px-3 py-1 text-sm text-ink"
               >
                 {s.name}
-                {s.phone && <span className="ml-2 text-xs text-slate-500">{s.phone}</span>}
+                {s.phone && <span className="ml-2 text-xs text-ink3">{s.phone}</span>}
               </span>
             ))}
           </div>

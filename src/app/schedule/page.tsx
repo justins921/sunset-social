@@ -40,13 +40,13 @@ function MatchupCard({
   const rowCount = Math.max(homePlayers.length, awayPlayers.length, 0);
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+    <div className="rounded-lg border border-line bg-surface2 p-3">
       <div className="mb-2 flex items-center justify-center gap-2 text-xs font-semibold">
-        <span className="text-slate-200">{home ? teamName.get(home) ?? `Team ${home}` : "?"}</span>
-        <span className="text-slate-500">vs</span>
-        <span className="text-slate-200">{away ? teamName.get(away) ?? `Team ${away}` : "?"}</span>
+        <span className="text-ink">{home ? teamName.get(home) ?? `Team ${home}` : "?"}</span>
+        <span className="text-ink3">vs</span>
+        <span className="text-ink">{away ? teamName.get(away) ?? `Team ${away}` : "?"}</span>
         {note && (
-          <span className="rounded bg-sunset-500/20 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-sunset-200">
+          <span className="rounded bg-sunset-500/20 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-accent">
             {note}
           </span>
         )}
@@ -61,13 +61,13 @@ function MatchupCard({
                 key={i}
                 className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-xs"
               >
-                <span className="truncate text-right text-slate-200">
+                <span className="truncate text-right text-ink">
                   {h?.name ?? "—"}
                 </span>
-                <span className="font-mono text-[10px] text-slate-500">
+                <span className="font-mono text-[10px] text-ink3">
                   {h?.slot ?? a?.slot ?? SLOT_ORDER[i] ?? ""}
                 </span>
-                <span className="truncate text-left text-slate-200">
+                <span className="truncate text-left text-ink">
                   {a?.name ?? "—"}
                 </span>
               </div>
@@ -75,7 +75,7 @@ function MatchupCard({
           })}
         </div>
       ) : (
-        <p className="text-center font-mono text-xs text-slate-400">{raw}</p>
+        <p className="text-center font-mono text-xs text-ink2">{raw}</p>
       )}
     </div>
   );
@@ -107,7 +107,7 @@ export default async function SchedulePage() {
       />
 
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-        <ol className="relative space-y-3 border-l border-white/10 pl-6">
+        <ol className="relative space-y-3 border-l border-line pl-6">
           {SCHEDULE.map((w, i) => {
             const past = isPast(w.date);
             const isNext = i === nextIdx;
@@ -118,8 +118,8 @@ export default async function SchedulePage() {
                     isNext
                       ? "border-sunset-300 bg-sunset-400"
                       : past
-                        ? "border-white/20 bg-dusk-800"
-                        : "border-sunset-500/60 bg-dusk-800"
+                        ? "border-line bg-surface"
+                        : "border-sunset-500/60 bg-surface"
                   }`}
                   aria-hidden
                 />
@@ -127,26 +127,26 @@ export default async function SchedulePage() {
                   className={`rounded-xl border px-4 py-3 transition ${
                     isNext
                       ? "border-sunset-500/40 bg-sunset-500/10"
-                      : "border-white/10 bg-dusk-800/40"
+                      : "border-line bg-surface/40"
                   } ${past ? "opacity-70" : ""}`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="flex items-center gap-3">
-                      <span className="font-semibold text-white">{w.label}</span>
+                      <span className="font-semibold text-ink">{w.label}</span>
                       {isNext && (
-                        <span className="rounded-full bg-sunset-500/25 px-2 py-0.5 text-xs font-medium text-sunset-100">
+                        <span className="rounded-full bg-sunset-500/25 px-2 py-0.5 text-xs font-medium text-accent">
                           Up next
                         </span>
                       )}
                     </span>
                     {w.matchups.length > 0 && (
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-ink3">
                         {w.matchups.length} match{w.matchups.length === 1 ? "" : "es"}
                       </span>
                     )}
                   </div>
                   {w.note && (
-                    <p className="mt-1 text-sm font-medium text-sunset-200">{w.note}</p>
+                    <p className="mt-1 text-sm font-medium text-accent">{w.note}</p>
                   )}
                   {w.matchups.length > 0 && (
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -173,14 +173,14 @@ export default async function SchedulePage() {
             {FUN_NIGHTS.map((f) => (
               <div
                 key={f.name}
-                className="rounded-2xl border border-white/10 bg-dusk-800/40 p-5"
+                className="rounded-2xl border border-line bg-surface/40 p-5"
               >
-                <h3 className="font-semibold text-sunset-200">{f.name}</h3>
-                <p className="mt-2 text-sm text-slate-300">{f.description}</p>
+                <h3 className="font-semibold text-accent">{f.name}</h3>
+                <p className="mt-2 text-sm text-ink2">{f.description}</p>
               </div>
             ))}
           </div>
-          <p className="mt-6 text-sm text-slate-400">
+          <p className="mt-6 text-sm text-ink2">
             The banquet is held at Jeff&apos;s on Rugby, on the corner of 10th Ave and Rugby.
           </p>
         </div>

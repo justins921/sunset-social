@@ -18,17 +18,17 @@ export default async function AdminDashboard() {
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-sunset-300">
+          <p className="text-xs font-semibold uppercase tracking-widest text-accent">
             Secretary tools
           </p>
           <h1 className="text-2xl font-bold tracking-tight">Secretary tools</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-sm text-slate-400 hover:text-sunset-300">
+          <Link href="/" className="text-sm text-ink2 hover:text-accent">
             View site
           </Link>
           <form action={logoutAction}>
-            <button className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/5">
+            <button className="rounded-lg border border-line px-3 py-1.5 text-sm text-ink2 hover:bg-surface2">
               Sign out
             </button>
           </form>
@@ -48,10 +48,10 @@ export default async function AdminDashboard() {
             <Link
               key={c.href}
               href={c.href}
-              className="rounded-2xl border border-white/10 bg-dusk-800/40 p-4 hover:border-sunset-500/40"
+              className="rounded-2xl border border-line bg-surface/40 p-4 hover:border-sunset-500/40"
             >
               <p className="font-semibold">{c.title}</p>
-              <p className="mt-1 text-sm text-slate-400">{c.sub}</p>
+              <p className="mt-1 text-sm text-ink2">{c.sub}</p>
             </Link>
           ))}
         </div>
@@ -62,8 +62,8 @@ export default async function AdminDashboard() {
       )}
 
       {!dbReady ? (
-        <div className="mt-8 rounded-2xl border border-sunset-500/30 bg-sunset-500/10 p-6 text-sm text-slate-200">
-          <p className="font-semibold text-sunset-200">Connect a database</p>
+        <div className="mt-8 rounded-2xl border border-sunset-500/30 bg-sunset-500/10 p-6 text-sm text-ink">
+          <p className="font-semibold text-accent">Connect a database</p>
           <p className="mt-2">
             No Postgres connection was found. In Vercel, add a Postgres store to
             this project (Storage → Create → Postgres) and redeploy. The tables
@@ -72,22 +72,22 @@ export default async function AdminDashboard() {
         </div>
       ) : (
         <>
-          <p className="mt-6 text-sm text-slate-400">
+          <p className="mt-6 text-sm text-ink2">
             Pick a week to enter each golfer&apos;s 9-hole score and points. Points
             you enter here add to the season totals and appear on the public{" "}
-            <Link href="/results" className="text-sunset-300 hover:underline">
+            <Link href="/results" className="text-accent hover:underline">
               results
             </Link>{" "}
             and{" "}
-            <Link href="/standings" className="text-sunset-300 hover:underline">
+            <Link href="/standings" className="text-accent hover:underline">
               standings
             </Link>{" "}
             pages.
           </p>
 
-          <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
+          <div className="mt-6 overflow-hidden rounded-2xl border border-line">
             <table className="w-full text-sm">
-              <thead className="bg-white/5 text-left text-xs uppercase tracking-wider text-slate-400">
+              <thead className="bg-surface2 text-left text-xs uppercase tracking-wider text-ink2">
                 <tr>
                   <th className="px-4 py-3">Week</th>
                   <th className="px-4 py-3">Note</th>
@@ -96,18 +96,18 @@ export default async function AdminDashboard() {
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-line">
                 {weeks.map((w) => (
-                  <tr key={w.id} className="hover:bg-white/5">
+                  <tr key={w.id} className="hover:bg-surface2">
                     <td className="px-4 py-3 font-semibold">
                       {w.label}
                       {!w.entryOpen && (
-                        <span className="ml-2 rounded bg-white/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-400">
+                        <span className="ml-2 rounded bg-surface2 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-ink2">
                           Baseline
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-400">{w.note ?? "—"}</td>
+                    <td className="px-4 py-3 text-ink2">{w.note ?? "—"}</td>
                     <td className="px-4 py-3 text-center font-mono">
                       {w.resultCount > 0 ? w.resultCount : "—"}
                     </td>
@@ -117,7 +117,7 @@ export default async function AdminDashboard() {
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/admin/week/${w.id}`}
-                        className="rounded-lg bg-sunset-500/20 px-3 py-1.5 text-sunset-100 hover:bg-sunset-500/30"
+                        className="rounded-lg bg-sunset-500/20 px-3 py-1.5 text-accent hover:bg-sunset-500/30"
                       >
                         Enter
                       </Link>
@@ -128,12 +128,12 @@ export default async function AdminDashboard() {
             </table>
           </div>
 
-          <div className="mt-6 rounded-xl border border-white/10 bg-dusk-800/40 p-4 text-xs text-slate-400">
+          <div className="mt-6 rounded-xl border border-line bg-surface/40 p-4 text-xs text-ink2">
             <p>
               Standings are the running sum of every week&apos;s points. The
               public &ldquo;as of&rdquo; date follows the last night you enter
               scores for, so just add each new night going forward.{" "}
-              <span className="font-semibold text-slate-300">Team points</span>{" "}
+              <span className="font-semibold text-ink2">Team points</span>{" "}
               are entered per team (they aren&apos;t the sum of the four players —
               absent players still earn team points), alongside each golfer&apos;s
               strokes and points.

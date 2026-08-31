@@ -23,20 +23,20 @@ export default function AdminLogin({
 
   return (
     <div className="mx-auto flex max-w-md flex-col justify-center px-4 py-20 sm:px-6">
-      <Link href="/" className="mb-8 text-sm text-slate-400 hover:text-sunset-300">
+      <Link href="/" className="mb-8 text-sm text-ink2 hover:text-accent">
         ← Back to the site
       </Link>
-      <div className="rounded-2xl border border-white/10 bg-dusk-800/50 p-6">
+      <div className="rounded-2xl border border-line bg-surface/50 p-6">
         <h1 className="text-xl font-bold">Secretary sign in</h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-ink2">
           Enter the league admin password to post scores.
         </p>
 
         {!configured ? (
-          <div className="mt-5 rounded-xl border border-sunset-500/30 bg-sunset-500/10 p-4 text-sm text-slate-200">
-            <p className="font-semibold text-sunset-200">Set up required</p>
+          <div className="mt-5 rounded-xl border border-sunset-500/30 bg-sunset-500/10 p-4 text-sm text-ink">
+            <p className="font-semibold text-accent">Set up required</p>
             <p className="mt-2">
-              Add an <code className="rounded bg-white/10 px-1">ADMIN_PASSWORD</code>{" "}
+              Add an <code className="rounded bg-surface2 px-1">ADMIN_PASSWORD</code>{" "}
               environment variable in your Vercel project settings, then redeploy.
               That password unlocks this screen.
             </p>
@@ -51,7 +51,7 @@ export default function AdminLogin({
             <div>
               <label
                 htmlFor="password"
-                className="mb-1 block text-sm text-slate-300"
+                className="mb-1 block text-sm text-ink2"
               >
                 Password
               </label>
@@ -61,12 +61,12 @@ export default function AdminLogin({
                 type="password"
                 autoFocus
                 required
-                className="w-full rounded-lg border border-white/10 bg-dusk-950 px-3 py-2 text-white outline-none focus:border-sunset-400"
+                className="w-full rounded-lg border border-line bg-page px-3 py-2 text-ink outline-none focus:border-sunset-400"
               />
             </div>
             <button
               type="submit"
-              className="w-full rounded-lg bg-sunset-500 px-4 py-2.5 font-semibold text-white transition hover:bg-sunset-600"
+              className="w-full rounded-lg bg-sunset-500 px-4 py-2.5 font-semibold text-ink transition hover:bg-sunset-600"
             >
               Sign in
             </button>

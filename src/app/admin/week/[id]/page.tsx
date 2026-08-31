@@ -25,14 +25,14 @@ export default async function WeekEntryPage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-      <Link href="/admin" className="text-sm text-slate-400 hover:text-sunset-300">
+      <Link href="/admin" className="text-sm text-ink2 hover:text-accent">
         ← All weeks
       </Link>
 
       <div className="mt-3 flex flex-wrap items-end justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{week.label}</h1>
-          {week.note && <p className="text-sm text-sunset-200">{week.note}</p>}
+          {week.note && <p className="text-sm text-accent">{week.note}</p>}
         </div>
       </div>
 

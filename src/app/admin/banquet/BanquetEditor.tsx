@@ -6,9 +6,9 @@ import type { BanquetData, BanquetAwards } from "@/data/banquet2026";
 import { saveBanquetAction } from "./actions";
 
 const input =
-  "w-full rounded-lg border border-white/10 bg-dusk-950 px-3 py-2 text-white outline-none focus:border-sunset-400";
-const label = "text-[11px] uppercase tracking-widest text-slate-400";
-const btn = "rounded-lg bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/20";
+  "w-full rounded-lg border border-line bg-page px-3 py-2 text-ink outline-none focus:border-sunset-400";
+const label = "text-[11px] uppercase tracking-widest text-ink2";
+const btn = "rounded-lg bg-surface2 px-3 py-1.5 text-sm text-ink hover:bg-surface2";
 const num = (s: string) => {
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
@@ -62,8 +62,8 @@ export function BanquetEditor({ banquet }: { banquet: Banquet }) {
       <Section title="Door prizes" note="Draw order, item, and number of winners. Winner names are filled on the final-copy print.">
         <div className="space-y-2">
           {d.doorPrizes.map((p, i) => (
-            <div key={i} className="flex items-center gap-2 rounded-lg border border-white/5 bg-dusk-800/30 p-2">
-              <span className="w-6 shrink-0 text-center text-xs text-slate-500">{p.n}</span>
+            <div key={i} className="flex items-center gap-2 rounded-lg border border-line bg-surface/30 p-2">
+              <span className="w-6 shrink-0 text-center text-xs text-ink3">{p.n}</span>
               <input
                 className={`${input} flex-1`}
                 placeholder="Prize item"
@@ -74,7 +74,7 @@ export function BanquetEditor({ banquet }: { banquet: Banquet }) {
                   set("doorPrizes", dp);
                 }}
               />
-              <label className="flex items-center gap-1 text-xs text-slate-400">
+              <label className="flex items-center gap-1 text-xs text-ink2">
                 winners
                 <input
                   type="number"
@@ -90,7 +90,7 @@ export function BanquetEditor({ banquet }: { banquet: Banquet }) {
                   }}
                 />
               </label>
-              <button type="button" className="px-2 text-slate-500 hover:text-red-300" onClick={() => set("doorPrizes", d.doorPrizes.filter((_, k) => k !== i))}>
+              <button type="button" className="px-2 text-ink3 hover:text-red-300" onClick={() => set("doorPrizes", d.doorPrizes.filter((_, k) => k !== i))}>
                 ✕
               </button>
             </div>
@@ -118,7 +118,7 @@ export function BanquetEditor({ banquet }: { banquet: Banquet }) {
               <input className={`${input} w-16`} placeholder="Flt" value={f.flight} onChange={(e) => editList("flightNight", i, { flight: e.target.value })} />
               <input className={`${input} flex-1`} placeholder="Name" value={f.name} onChange={(e) => editList("flightNight", i, { name: e.target.value })} />
               <input className={`${input} w-24`} placeholder="Net" value={f.net} onChange={(e) => editList("flightNight", i, { net: e.target.value })} />
-              <button type="button" className="px-2 text-slate-500 hover:text-red-300" onClick={() => set("flightNight", d.flightNight.filter((_, k) => k !== i))}>✕</button>
+              <button type="button" className="px-2 text-ink3 hover:text-red-300" onClick={() => set("flightNight", d.flightNight.filter((_, k) => k !== i))}>✕</button>
             </div>
           ))}
         </div>
@@ -132,7 +132,7 @@ export function BanquetEditor({ banquet }: { banquet: Banquet }) {
             <div key={i} className="flex items-center gap-2">
               <input className={`${input} w-40`} placeholder="Event / hole" value={h.label} onChange={(e) => editList("holeEvents", i, { label: e.target.value })} />
               <input className={`${input} flex-1`} placeholder="Winner" value={h.winner} onChange={(e) => editList("holeEvents", i, { winner: e.target.value })} />
-              <button type="button" className="px-2 text-slate-500 hover:text-red-300" onClick={() => set("holeEvents", d.holeEvents.filter((_, k) => k !== i))}>✕</button>
+              <button type="button" className="px-2 text-ink3 hover:text-red-300" onClick={() => set("holeEvents", d.holeEvents.filter((_, k) => k !== i))}>✕</button>
             </div>
           ))}
         </div>
@@ -164,7 +164,7 @@ export function BanquetEditor({ banquet }: { banquet: Banquet }) {
               <input className={`${input} flex-1`} placeholder="Name" value={m.name} onChange={(e) => editAwardArr("leagueMvps", i, { name: e.target.value })} />
               <input className={`${input} w-28`} placeholder="Team" value={m.teamName} onChange={(e) => editAwardArr("leagueMvps", i, { teamName: e.target.value })} />
               <input className={`${input} w-20`} placeholder="Pts" value={String(m.points)} onChange={(e) => editAwardArr("leagueMvps", i, { points: num(e.target.value) })} />
-              {!auto && <button type="button" className="px-2 text-slate-500 hover:text-red-300" onClick={() => setAward({ leagueMvps: awards.leagueMvps.filter((_, k) => k !== i) })}>✕</button>}
+              {!auto && <button type="button" className="px-2 text-ink3 hover:text-red-300" onClick={() => setAward({ leagueMvps: awards.leagueMvps.filter((_, k) => k !== i) })}>✕</button>}
             </div>
           ))}
           {!auto && <button type="button" className={`${btn} mt-1`} onClick={() => setAward({ leagueMvps: [...awards.leagueMvps, { teamId: 0, teamName: "", name: "", points: 0 }] })}>+ Add MVP</button>}
@@ -176,7 +176,7 @@ export function BanquetEditor({ banquet }: { banquet: Banquet }) {
               <input className={`${input} w-28`} placeholder="Team" value={m.teamName} onChange={(e) => editAwardArr("teamMvps", i, { teamName: e.target.value })} />
               <input className={`${input} flex-1`} placeholder="Name" value={m.name} onChange={(e) => editAwardArr("teamMvps", i, { name: e.target.value })} />
               <input className={`${input} w-20`} placeholder="Pts" value={String(m.points)} onChange={(e) => editAwardArr("teamMvps", i, { points: num(e.target.value) })} />
-              {!auto && <button type="button" className="px-2 text-slate-500 hover:text-red-300" onClick={() => setAward({ teamMvps: awards.teamMvps.filter((_, k) => k !== i) })}>✕</button>}
+              {!auto && <button type="button" className="px-2 text-ink3 hover:text-red-300" onClick={() => setAward({ teamMvps: awards.teamMvps.filter((_, k) => k !== i) })}>✕</button>}
             </div>
           ))}
           {!auto && <button type="button" className={`${btn} mt-1`} onClick={() => setAward({ teamMvps: [...awards.teamMvps, { teamId: 0, teamName: "", name: "", points: 0 }] })}>+ Add team MVP</button>}
@@ -184,9 +184,9 @@ export function BanquetEditor({ banquet }: { banquet: Banquet }) {
           {/* Places */}
           <SubHead>1st / 2nd / 3rd place</SubHead>
           {awards.placeWinners.map((pw, i) => (
-            <div key={i} className="mb-2 rounded-lg border border-white/5 bg-dusk-800/30 p-2">
+            <div key={i} className="mb-2 rounded-lg border border-line bg-surface/30 p-2">
               <div className="flex items-center gap-2">
-                <span className="w-10 text-center text-xs text-slate-400">{pw.place === 1 ? "1st" : pw.place === 2 ? "2nd" : "3rd"}</span>
+                <span className="w-10 text-center text-xs text-ink2">{pw.place === 1 ? "1st" : pw.place === 2 ? "2nd" : "3rd"}</span>
                 <input className={`${input} w-28`} placeholder="Team" value={pw.teamName} onChange={(e) => editAwardArr("placeWinners", i, { teamName: e.target.value })} />
                 <input className={`${input} w-24`} placeholder="Pts" value={String(pw.points)} onChange={(e) => editAwardArr("placeWinners", i, { points: num(e.target.value) })} />
               </div>
@@ -234,7 +234,7 @@ export function BanquetEditor({ banquet }: { banquet: Banquet }) {
             <div key={i} className="flex items-center gap-2">
               <input className={`${input} w-56`} placeholder="Office" value={o.office} onChange={(e) => editList("officers", i, { office: e.target.value })} />
               <input className={`${input} flex-1`} placeholder="Nominee" value={o.name} onChange={(e) => editList("officers", i, { name: e.target.value })} />
-              <button type="button" className="px-2 text-slate-500 hover:text-red-300" onClick={() => set("officers", d.officers.filter((_, k) => k !== i))}>✕</button>
+              <button type="button" className="px-2 text-ink3 hover:text-red-300" onClick={() => set("officers", d.officers.filter((_, k) => k !== i))}>✕</button>
             </div>
           ))}
         </div>
@@ -242,15 +242,15 @@ export function BanquetEditor({ banquet }: { banquet: Banquet }) {
       </Section>
 
       {/* Save bar */}
-      <div className="fixed inset-x-0 bottom-0 border-t border-white/10 bg-dusk-950/95 px-4 py-3 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 border-t border-line bg-page/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2 text-sm">
-            <a href="/print/banquet?mode=final" target="_blank" className="rounded-lg border border-white/10 px-3 py-2 text-white hover:bg-white/10">Print final copy ↗</a>
-            <a href="/print/banquet?mode=worksheet" target="_blank" className="rounded-lg border border-white/10 px-3 py-2 text-white hover:bg-white/10">Print blank worksheet ↗</a>
+            <a href="/print/banquet?mode=final" target="_blank" className="rounded-lg border border-line px-3 py-2 text-ink hover:bg-surface2">Print final copy ↗</a>
+            <a href="/print/banquet?mode=worksheet" target="_blank" className="rounded-lg border border-line px-3 py-2 text-ink hover:bg-surface2">Print blank worksheet ↗</a>
           </div>
           <div className="flex items-center gap-3">
             {saved && <span className="text-sm text-fairway-400">Saved</span>}
-            <button type="button" disabled={saving} className="rounded-lg bg-sunset-500 px-5 py-2 font-semibold text-white hover:bg-sunset-600 disabled:opacity-50" onClick={onSave}>
+            <button type="button" disabled={saving} className="rounded-lg bg-sunset-500 px-5 py-2 font-semibold text-ink hover:bg-sunset-600 disabled:opacity-50" onClick={onSave}>
               {saving ? "Saving…" : "Save"}
             </button>
           </div>
@@ -282,9 +282,9 @@ export function BanquetEditor({ banquet }: { banquet: Banquet }) {
 
 function Section({ title, note, children }: { title: string; note?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-dusk-800/40 p-5">
+    <section className="rounded-2xl border border-line bg-surface/40 p-5">
       <h2 className="text-lg font-semibold">{title}</h2>
-      {note && <p className="mt-0.5 text-xs text-slate-400">{note}</p>}
+      {note && <p className="mt-0.5 text-xs text-ink2">{note}</p>}
       <div className="mt-3 space-y-3">{children}</div>
     </section>
   );
@@ -298,5 +298,5 @@ function Field({ label: l, children }: { label: string; children: React.ReactNod
   );
 }
 function SubHead({ children }: { children: React.ReactNode }) {
-  return <h3 className="mb-1 mt-4 text-sm font-semibold text-sunset-300">{children}</h3>;
+  return <h3 className="mb-1 mt-4 text-sm font-semibold text-accent">{children}</h3>;
 }

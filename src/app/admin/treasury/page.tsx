@@ -20,14 +20,14 @@ const money = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
 const input =
-  "rounded-lg border border-white/10 bg-dusk-950 px-3 py-2 text-white outline-none focus:border-sunset-400";
+  "rounded-lg border border-line bg-page px-3 py-2 text-ink outline-none focus:border-sunset-400";
 
 function RemoveBtn({ table, id }: { table: string; id: number }) {
   return (
     <form action={removeFinAction}>
       <input type="hidden" name="table" value={table} />
       <input type="hidden" name="id" value={id} />
-      <button className="text-xs text-slate-500 hover:text-red-300">✕</button>
+      <button className="text-xs text-ink3 hover:text-red-300">✕</button>
     </form>
   );
 }
@@ -41,12 +41,12 @@ export default async function TreasuryAdmin() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       <div className="flex items-center justify-between">
-        <Link href="/admin" className="text-sm text-slate-400 hover:text-sunset-300">
+        <Link href="/admin" className="text-sm text-ink2 hover:text-accent">
           ← Admin
         </Link>
         <Link
           href="/print/financial"
-          className="rounded-lg bg-sunset-500 px-4 py-2 text-sm font-semibold text-white hover:bg-sunset-600"
+          className="rounded-lg bg-sunset-500 px-4 py-2 text-sm font-semibold text-ink hover:bg-sunset-600"
         >
           Financial Report →
         </Link>
@@ -62,9 +62,9 @@ export default async function TreasuryAdmin() {
           { label: "Debit total", value: money(f.debitTotal) },
           { label: "Money on hand", value: money(f.moneyOnHand), accent: true },
         ].map((c) => (
-          <div key={c.label} className="rounded-2xl border border-white/10 bg-dusk-800/40 p-3">
-            <p className="text-[11px] uppercase tracking-widest text-slate-400">{c.label}</p>
-            <p className={`mt-1 text-lg font-semibold ${c.accent ? "text-sunset-200" : "text-white"}`}>
+          <div key={c.label} className="rounded-2xl border border-line bg-surface/40 p-3">
+            <p className="text-[11px] uppercase tracking-widest text-ink2">{c.label}</p>
+            <p className={`mt-1 text-lg font-semibold ${c.accent ? "text-accent" : "text-ink"}`}>
               {c.value}
             </p>
           </div>
@@ -85,14 +85,14 @@ export default async function TreasuryAdmin() {
               <option value="other">Other</option>
             </select>
             <input name="amount" placeholder="$" inputMode="decimal" className={`${input} w-24`} />
-            <button className="rounded-lg bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/20">Add</button>
+            <button className="rounded-lg bg-surface2 px-3 py-2 text-sm text-ink hover:bg-surface2">Add</button>
           </form>
-          <ul className="mt-3 divide-y divide-white/5 text-sm">
+          <ul className="mt-3 divide-y divide-line text-sm">
             {f.income.map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-2 py-2">
                 <span className="min-w-0 flex-1">
                   <span className="block truncate">{r.description}</span>
-                  {r.category && <span className="text-xs text-slate-500">{r.category}</span>}
+                  {r.category && <span className="text-xs text-ink3">{r.category}</span>}
                 </span>
                 <span className="font-mono text-fairway-400">{money(r.amount)}</span>
                 <RemoveBtn table="income" id={r.id} />
@@ -109,9 +109,9 @@ export default async function TreasuryAdmin() {
             <input name="description" placeholder="Description" className={`${input} flex-1`} />
             <input name="checkNo" placeholder="CK#" className={`${input} w-24`} />
             <input name="amount" placeholder="$" inputMode="decimal" className={`${input} w-24`} />
-            <button className="rounded-lg bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/20">Add</button>
+            <button className="rounded-lg bg-surface2 px-3 py-2 text-sm text-ink hover:bg-surface2">Add</button>
           </form>
-          <ul className="mt-3 divide-y divide-white/5 text-sm">
+          <ul className="mt-3 divide-y divide-line text-sm">
             {f.expenses.map((r) => {
               const itemSum = r.items.reduce((s, it) => s + it.amount, 0);
               const mismatch = r.items.length > 0 && Math.abs(itemSum - r.amount) > 0.005;
@@ -120,25 +120,25 @@ export default async function TreasuryAdmin() {
                   <div className="flex items-center justify-between gap-2">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate">{r.description}</span>
-                      {r.checkNo && <span className="text-xs text-slate-500">{r.checkNo}</span>}
+                      {r.checkNo && <span className="text-xs text-ink3">{r.checkNo}</span>}
                     </span>
                     <span className="font-mono text-red-300">{money(r.amount)}</span>
                     <RemoveBtn table="expense" id={r.id} />
                   </div>
                   {/* Itemized receipt lines */}
                   {r.items.length > 0 && (
-                    <ul className="ml-3 mt-1 border-l border-white/10 pl-3 text-xs">
+                    <ul className="ml-3 mt-1 border-l border-line pl-3 text-xs">
                       {r.items.map((it) => (
-                        <li key={it.id} className="flex items-center justify-between gap-2 py-0.5 text-slate-300">
+                        <li key={it.id} className="flex items-center justify-between gap-2 py-0.5 text-ink2">
                           <span className="min-w-0 flex-1 truncate">{it.description}</span>
-                          <span className="font-mono text-slate-400">{money(it.amount)}</span>
+                          <span className="font-mono text-ink2">{money(it.amount)}</span>
                           <form action={removeExpenseItemAction}>
                             <input type="hidden" name="id" value={it.id} />
-                            <button className="text-slate-600 hover:text-red-300">✕</button>
+                            <button className="text-ink3 hover:text-red-300">✕</button>
                           </form>
                         </li>
                       ))}
-                      <li className={`flex justify-between pt-0.5 font-mono ${mismatch ? "text-amber-300" : "text-slate-500"}`}>
+                      <li className={`flex justify-between pt-0.5 font-mono ${mismatch ? "text-amber-300" : "text-ink3"}`}>
                         <span>items subtotal{mismatch ? " (≠ total)" : ""}</span>
                         <span>{money(itemSum)}</span>
                       </li>
@@ -149,7 +149,7 @@ export default async function TreasuryAdmin() {
                     <input type="hidden" name="expenseId" value={r.id} />
                     <input name="description" placeholder="+ itemize (e.g. prize)" className={`${input} h-8 flex-1 py-1 text-xs`} />
                     <input name="amount" placeholder="$" inputMode="decimal" className={`${input} h-8 w-20 py-1 text-xs`} />
-                    <button className="rounded-lg bg-white/10 px-2 py-1 text-xs text-white hover:bg-white/20">Add</button>
+                    <button className="rounded-lg bg-surface2 px-2 py-1 text-xs text-ink hover:bg-surface2">Add</button>
                   </form>
                 </li>
               );
@@ -161,16 +161,16 @@ export default async function TreasuryAdmin() {
       {/* Drawings */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold">Drawings log</h2>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs text-ink2">
           The weekly 50/50 plus the Fun Night $100 and $50 drawings — tracked separately.
         </p>
         {/* Per-kind money brought in */}
         {f.drawingTotals.length > 0 && (
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             {f.drawingTotals.map((d) => (
-              <div key={d.kind} className="rounded-xl border border-white/10 bg-dusk-800/40 p-2">
-                <p className="text-[11px] uppercase tracking-widest text-slate-400">{d.label}</p>
-                <p className="mt-0.5 font-mono text-white">{money(d.total)}</p>
+              <div key={d.kind} className="rounded-xl border border-line bg-surface/40 p-2">
+                <p className="text-[11px] uppercase tracking-widest text-ink2">{d.label}</p>
+                <p className="mt-0.5 font-mono text-ink">{money(d.total)}</p>
               </div>
             ))}
           </div>
@@ -184,14 +184,14 @@ export default async function TreasuryAdmin() {
           </select>
           <input name="winner" placeholder="Winner(s)" className={`${input} flex-1`} />
           <input name="amount" placeholder="$" inputMode="decimal" className={`${input} w-24`} />
-          <button className="rounded-lg bg-white/10 px-3 py-2 text-sm text-white hover:bg-white/20">Add</button>
+          <button className="rounded-lg bg-surface2 px-3 py-2 text-sm text-ink hover:bg-surface2">Add</button>
         </form>
         <ul className="mt-3 grid gap-x-6 sm:grid-cols-2">
           {f.fifty.map((r) => (
-            <li key={r.id} className="flex items-center justify-between gap-2 border-b border-white/5 py-1.5 text-sm">
-              <span className="w-20 shrink-0 text-slate-400">{r.date}</span>
+            <li key={r.id} className="flex items-center justify-between gap-2 border-b border-line py-1.5 text-sm">
+              <span className="w-20 shrink-0 text-ink2">{r.date}</span>
               {r.kind !== "50/50" && (
-                <span className="shrink-0 rounded bg-sunset-500/20 px-1.5 py-0.5 text-[10px] text-sunset-200">
+                <span className="shrink-0 rounded bg-sunset-500/20 px-1.5 py-0.5 text-[10px] text-accent">
                   {drawingLabel(r.kind)}
                 </span>
               )}
@@ -204,11 +204,11 @@ export default async function TreasuryAdmin() {
       </section>
 
       {/* Officers */}
-      <section className="mt-10 rounded-2xl border border-white/10 bg-dusk-800/40 p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-sunset-300">
+      <section className="mt-10 rounded-2xl border border-line bg-surface/40 p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-accent">
           Report signatures
         </h2>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs text-ink2">
           The three names and titles printed on the Financial Report signature lines.
         </p>
         <form action={saveOfficersAction} className="mt-3 space-y-2">
@@ -228,13 +228,13 @@ export default async function TreasuryAdmin() {
               />
             </div>
           ))}
-          <button className="rounded-lg bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20">Save</button>
+          <button className="rounded-lg bg-surface2 px-4 py-2 text-sm text-ink hover:bg-surface2">Save</button>
         </form>
       </section>
 
-      <p className="mt-6 text-xs text-slate-500">
+      <p className="mt-6 text-xs text-ink3">
         Grand total = income + 50/50. Money on hand = grand total − debit total.
-        Enter dues as income lines. Use <span className="text-slate-300">Financial Report</span> to print/email the balance sheet.
+        Enter dues as income lines. Use <span className="text-ink2">Financial Report</span> to print/email the balance sheet.
       </p>
     </div>
   );

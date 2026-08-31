@@ -41,24 +41,24 @@ export default async function TeamsPage() {
             <div
               key={t.id}
               id={`team-${t.id}`}
-              className="scroll-mt-20 rounded-2xl border border-white/10 bg-dusk-800/40 p-5"
+              className="scroll-mt-20 rounded-2xl border border-line bg-surface/40 p-5"
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold">{t.name}</h2>
                 <div className="flex items-center gap-3 text-sm">
-                  <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-slate-400">
+                  <span className="rounded-full bg-surface2 px-2.5 py-0.5 text-ink2">
                     {placeById.get(t.id) ? `${ordinal(placeById.get(t.id)!)} place` : ""}
                   </span>
-                  <span className="font-mono font-semibold text-sunset-200">
+                  <span className="font-mono font-semibold text-accent">
                     {(pointsById.get(t.id) ?? 0).toFixed(1)} pts
                   </span>
                 </div>
               </div>
-              <ul className="mt-4 divide-y divide-white/5">
+              <ul className="mt-4 divide-y divide-line">
                 {t.players.map((p) => (
                   <li key={p.name} className="flex items-center justify-between py-2.5">
                     <span className="flex items-center gap-3">
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-white/5 font-mono text-xs text-slate-400">
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-surface2 font-mono text-xs text-ink2">
                         {p.slot}
                       </span>
                       <span className="font-medium">{p.name}</span>
@@ -67,15 +67,15 @@ export default async function TeamsPage() {
                       {p.phone && (
                         <a
                           href={`tel:${p.phone.replace(/\./g, "")}`}
-                          className="text-xs text-slate-400 hover:text-sunset-300"
+                          className="text-xs text-ink2 hover:text-accent"
                         >
                           {p.phone}
                         </a>
                       )}
-                      <span className="hidden text-xs text-slate-500 sm:inline">
+                      <span className="hidden text-xs text-ink3 sm:inline">
                         Hcp {playerHcp.get(`${t.id}-${p.name}`) ?? "—"}
                       </span>
-                      <span className="font-mono text-sm text-slate-300">
+                      <span className="font-mono text-sm text-ink2">
                         {(playerPoints.get(`${t.id}-${p.name}`) ?? 0).toFixed(1)}
                       </span>
                     </span>
@@ -89,20 +89,20 @@ export default async function TeamsPage() {
         {/* Subs */}
         <div className="mt-12">
           <h2 className="text-2xl font-bold tracking-tight">Substitutes</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-ink2">
             Call ahead if you need someone to fill in for your match.
           </p>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
             {SUBS.map((s) => (
               <div
                 key={s.name}
-                className="flex items-center justify-between rounded-xl border border-white/10 bg-dusk-800/40 px-4 py-2.5"
+                className="flex items-center justify-between rounded-xl border border-line bg-surface/40 px-4 py-2.5"
               >
                 <span className="font-medium">{s.name}</span>
                 {s.phone && (
                   <a
                     href={`tel:${s.phone.replace(/\./g, "")}`}
-                    className="text-xs text-slate-400 hover:text-sunset-300"
+                    className="text-xs text-ink2 hover:text-accent"
                   >
                     {s.phone}
                   </a>
@@ -112,9 +112,9 @@ export default async function TeamsPage() {
           </div>
         </div>
 
-        <p className="mt-10 text-xs text-slate-500">
+        <p className="mt-10 text-xs text-ink3">
           See the{" "}
-          <Link href="/standings" className="text-sunset-300 hover:underline">
+          <Link href="/standings" className="text-accent hover:underline">
             standings
           </Link>{" "}
           for current placement. Points and handicaps update as scores are posted.

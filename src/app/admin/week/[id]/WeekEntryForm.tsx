@@ -90,13 +90,13 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
           return (
             <div
               key={group.teamId}
-              className="overflow-hidden rounded-2xl border border-white/10"
+              className="overflow-hidden rounded-2xl border border-line"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2 bg-white/5 px-4 py-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 bg-surface2 px-4 py-2.5">
                 <span className="text-sm font-semibold">{group.teamName}</span>
                 <div className="flex items-center gap-2">
                   <input type="hidden" name="teamId" value={group.teamId} />
-                  <label className="text-xs text-slate-400">Team points</label>
+                  <label className="text-xs text-ink2">Team points</label>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -107,15 +107,15 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
                     onChange={(e) =>
                       setOverride((o) => ({ ...o, [group.teamId]: e.target.value }))
                     }
-                    className={`w-20 rounded-lg border px-2 py-1 text-white outline-none focus:border-sunset-400 ${
+                    className={`w-20 rounded-lg border px-2 py-1 text-ink outline-none focus:border-sunset-400 ${
                       isAuto
                         ? "border-sunset-500/40 bg-sunset-500/10"
-                        : "border-white/10 bg-dusk-950"
+                        : "border-line bg-page"
                     }`}
                   />
                   {isAuto ? (
                     <span
-                      className="rounded bg-sunset-500/20 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-sunset-200"
+                      className="rounded bg-sunset-500/20 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-accent"
                       title="Auto-calculated from player points (+3.5 per absent). Type to override."
                     >
                       Auto
@@ -126,7 +126,7 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
                       onClick={() =>
                         setOverride((o) => ({ ...o, [group.teamId]: null }))
                       }
-                      className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-300 hover:bg-white/20"
+                      className="rounded bg-surface2 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-ink2 hover:bg-surface2"
                       title="Reset to the auto-calculated value"
                     >
                       Reset
@@ -136,7 +136,7 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
               </div>
               <div className="scroll-x">
                 <table className="w-full text-sm">
-                  <thead className="text-left text-xs uppercase tracking-wider text-slate-500">
+                  <thead className="text-left text-xs uppercase tracking-wider text-ink3">
                     <tr>
                       <th className="px-2 py-2 font-normal sm:px-4">Golfer</th>
                       <th className="px-2 py-2 font-normal sm:px-4">Strokes</th>
@@ -144,12 +144,12 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
                       <th className="px-2 py-2 font-normal sm:px-4">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-line">
                     {group.players.map((p) => (
                       <tr key={p.playerId}>
                         <td className="px-2 py-2.5 sm:px-4">
                           <input type="hidden" name="playerId" value={p.playerId} />
-                          <span className="mr-2 font-mono text-xs text-slate-500">
+                          <span className="mr-2 font-mono text-xs text-ink3">
                             {p.slot}
                           </span>
                           {p.name}
@@ -162,7 +162,7 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
                             max={99}
                             name={`strokes_${p.playerId}`}
                             defaultValue={p.strokes ?? ""}
-                            className="w-14 rounded-lg border border-white/10 bg-dusk-950 px-2 py-1.5 text-white outline-none focus:border-sunset-400 sm:w-20"
+                            className="w-14 rounded-lg border border-line bg-page px-2 py-1.5 text-ink outline-none focus:border-sunset-400 sm:w-20"
                           />
                         </td>
                         <td className="px-2 py-2.5 sm:px-4">
@@ -175,7 +175,7 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
                             name={`points_${p.playerId}`}
                             value={rows[p.playerId].points}
                             onChange={(e) => setPoints(p.playerId, e.target.value)}
-                            className="w-14 rounded-lg border border-white/10 bg-dusk-950 px-2 py-1.5 text-white outline-none focus:border-sunset-400 sm:w-20"
+                            className="w-14 rounded-lg border border-line bg-page px-2 py-1.5 text-ink outline-none focus:border-sunset-400 sm:w-20"
                           />
                         </td>
                         <td className="px-2 py-2.5 sm:px-4">
@@ -183,7 +183,7 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
                             name={`status_${p.playerId}`}
                             value={rows[p.playerId].status}
                             onChange={(e) => setStatus(p.playerId, e.target.value)}
-                            className="rounded-lg border border-white/10 bg-dusk-950 px-2 py-1.5 text-white outline-none focus:border-sunset-400"
+                            className="rounded-lg border border-line bg-page px-2 py-1.5 text-ink outline-none focus:border-sunset-400"
                           >
                             {STATUSES.map((s) => (
                               <option key={s.value} value={s.value}>
@@ -203,13 +203,13 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
       </div>
 
       {/* Recap */}
-      <div className="mt-6 rounded-2xl border border-white/10 bg-dusk-800/40 p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-sunset-300">
+      <div className="mt-6 rounded-2xl border border-line bg-surface/40 p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-accent">
           Night recap (optional)
         </h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm text-slate-300" htmlFor="lowScores">
+            <label className="mb-1 block text-sm text-ink2" htmlFor="lowScores">
               Low score(s)
             </label>
             <input
@@ -217,11 +217,11 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
               name="lowScores"
               defaultValue={week.lowScores ?? ""}
               placeholder="e.g. Ben Pitz — Even Par 35"
-              className="w-full rounded-lg border border-white/10 bg-dusk-950 px-3 py-2 text-white outline-none focus:border-sunset-400"
+              className="w-full rounded-lg border border-line bg-page px-3 py-2 text-ink outline-none focus:border-sunset-400"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm text-slate-300" htmlFor="fiftyFifty">
+            <label className="mb-1 block text-sm text-ink2" htmlFor="fiftyFifty">
               50/50 winner
             </label>
             <input
@@ -229,20 +229,20 @@ export function WeekEntryForm({ week }: { week: WeekEntry }) {
               name="fiftyFifty"
               defaultValue={week.fiftyFifty ?? ""}
               placeholder="e.g. Mike & Alan Lloyd — $130"
-              className="w-full rounded-lg border border-white/10 bg-dusk-950 px-3 py-2 text-white outline-none focus:border-sunset-400"
+              className="w-full rounded-lg border border-line bg-page px-3 py-2 text-ink outline-none focus:border-sunset-400"
             />
           </div>
         </div>
       </div>
 
-      <div className="sticky bottom-4 mt-6 flex items-center justify-between rounded-xl border border-white/10 bg-dusk-900/90 px-4 py-3 backdrop-blur">
-        <p className="text-xs text-slate-400">
+      <div className="sticky bottom-4 mt-6 flex items-center justify-between rounded-xl border border-line bg-surface/90 px-4 py-3 backdrop-blur">
+        <p className="text-xs text-ink2">
           Team points auto-calculate from player points (+3.5 per absent). Type in
           a team box to override.
         </p>
         <button
           type="submit"
-          className="rounded-lg bg-sunset-500 px-5 py-2.5 font-semibold text-white transition hover:bg-sunset-600"
+          className="rounded-lg bg-sunset-500 px-5 py-2.5 font-semibold text-ink transition hover:bg-sunset-600"
         >
           Save week
         </button>
