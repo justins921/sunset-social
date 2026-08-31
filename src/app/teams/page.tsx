@@ -3,16 +3,17 @@ import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { LEAGUE } from "@/data/league";
 import { ordinal } from "@/lib/standings";
-import { getTeamStandings, getIndividualStandings, getRoster } from "@/lib/queries";
+import { getTeamStandings, getIndividualStandings, getRoster, getSeasonMeta } from "@/lib/queries";
 
 export const metadata: Metadata = { title: "Teams" };
 export const dynamic = "force-dynamic";
 
 export default async function TeamsPage() {
-  const [ranked, individuals, roster] = await Promise.all([
+  const [ranked, individuals, roster, meta] = await Promise.all([
     getTeamStandings(),
     getIndividualStandings(),
     getRoster(),
+    getSeasonMeta(),
   ]);
   const placeById = new Map(ranked.map((t) => [t.id, t.place]));
   const pointsById = new Map(ranked.map((t) => [t.id, t.points]));
@@ -29,7 +30,7 @@ export default async function TeamsPage() {
   return (
     <div>
       <PageHeader
-        eyebrow={`Rosters as of ${LEAGUE.rosterAsOf}`}
+        eyebrow={meta.complete ? `Final ${LEAGUE.season} rosters · ${meta.asOf}` : `Rosters as of ${meta.asOf}`}
         title="Teams"
         subtitle={`${teams.length} teams of four. Each golfer plays a head-to-head match every week.`}
       />

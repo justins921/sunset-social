@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
-import { getResultsWeeks, type ResultRow } from "@/lib/queries";
+import { getResultsWeeks, getSeasonMeta, type ResultRow } from "@/lib/queries";
 import { LEAGUE } from "@/data/league";
 
 export const metadata: Metadata = { title: "Results" };
@@ -123,12 +123,12 @@ function WeekCard({
 }
 
 export default async function ResultsPage() {
-  const weeks = await getResultsWeeks();
+  const [weeks, meta] = await Promise.all([getResultsWeeks(), getSeasonMeta()]);
 
   return (
     <div>
       <PageHeader
-        eyebrow={`${LEAGUE.season} season`}
+        eyebrow={meta.complete ? `${LEAGUE.season} season · complete ${meta.asOf}` : `${LEAGUE.season} season · through ${meta.asOf}`}
         title="Weekly results"
         subtitle="Scores, points, low rounds and 50/50 winners, week by week. Most recent night first."
       />

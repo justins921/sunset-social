@@ -2,20 +2,23 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { LEAGUE } from "@/data/league";
-import { getTeamStandings, getIndividualStandings } from "@/lib/queries";
+import { getTeamStandings, getIndividualStandings, getSeasonMeta } from "@/lib/queries";
 
 export const metadata: Metadata = { title: "Standings" };
 export const dynamic = "force-dynamic";
 
 export default async function StandingsPage() {
-  const teams = await getTeamStandings();
-  const players = await getIndividualStandings();
+  const [teams, players, meta] = await Promise.all([
+    getTeamStandings(),
+    getIndividualStandings(),
+    getSeasonMeta(),
+  ]);
   const maxTeam = teams[0].points;
 
   return (
     <div>
       <PageHeader
-        eyebrow={`As of ${LEAGUE.standingsAsOf}`}
+        eyebrow={meta.complete ? `Final ${LEAGUE.season} standings · ${meta.asOf}` : `As of ${meta.asOf}`}
         title="Standings"
         subtitle="Team totals and individual points for the season. All team scores count toward the standings total."
       />
@@ -85,7 +88,9 @@ export default async function StandingsPage() {
                 <th className="px-4 py-3">#</th>
                 <th className="px-4 py-3">Golfer</th>
                 <th className="px-4 py-3">Team</th>
-                <th className="px-4 py-3 text-right">Hcp</th>
+                <th className="px-4 py-3 text-right" title="Current handicap (Rule 10, last 4 rounds)">
+                  Hcp<span className="font-normal text-slate-500">*</span>
+                </th>
                 <th className="px-4 py-3 text-right">Points</th>
               </tr>
             </thead>
@@ -116,7 +121,12 @@ export default async function StandingsPage() {
           <Link href="/rules" className="text-sunset-300 hover:underline">
             Rules
           </Link>
-          ). Standings current as of {LEAGUE.standingsAsOf}.
+          ). <span className="font-medium">*Hcp</span> is each golfer&apos;s current
+          handicap under Rule 10 — the average of their most recent four 9-hole
+          rounds minus par 35.{" "}
+          {meta.complete
+            ? `Final ${LEAGUE.season} standings, season complete ${meta.asOf}.`
+            : `Standings current as of ${meta.asOf}.`}
         </p>
       </div>
     </div>

@@ -4,7 +4,6 @@ import { adminConfigured, isAuthed } from "@/lib/auth";
 import { hasDb } from "@/lib/db";
 import { getAdminWeeks } from "@/lib/queries";
 import { logoutAction } from "@/app/admin/actions";
-import { LEAGUE } from "@/data/league";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Admin" };
@@ -131,9 +130,9 @@ export default async function AdminDashboard() {
 
           <div className="mt-6 rounded-xl border border-white/10 bg-dusk-800/40 p-4 text-xs text-slate-400">
             <p>
-              Standings are the running sum of every week&apos;s points. Weeks
-              through {LEAGUE.standingsAsOf} are pre-loaded from the 2026 results
-              sheets; just enter each new night going forward.{" "}
+              Standings are the running sum of every week&apos;s points. The
+              public &ldquo;as of&rdquo; date follows the last night you enter
+              scores for, so just add each new night going forward.{" "}
               <span className="font-semibold text-slate-300">Team points</span>{" "}
               are entered per team (they aren&apos;t the sum of the four players —
               absent players still earn team points), alongside each golfer&apos;s

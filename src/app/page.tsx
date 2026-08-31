@@ -1,6 +1,12 @@
 import Link from "next/link";
-import { LEAGUE, SCHEDULE, RECAPS } from "@/data/league";
-import { getTeamStandings, getIndividualStandings, getRoster } from "@/lib/queries";
+import { LEAGUE, SCHEDULE } from "@/data/league";
+import {
+  getTeamStandings,
+  getIndividualStandings,
+  getRoster,
+  getSeasonMeta,
+  getBanquet,
+} from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -12,15 +18,18 @@ function nextWeek() {
 }
 
 export default async function HomePage() {
-  const [teams, topAll, roster] = await Promise.all([
+  const [teams, topAll, roster, meta, banquet] = await Promise.all([
     getTeamStandings(),
     getIndividualStandings(),
     getRoster(),
+    getSeasonMeta(),
+    getBanquet(),
   ]);
   const leader = teams[0];
   const topPlayers = topAll.slice(0, 5);
   const week = nextWeek();
-  const latestRecap = RECAPS[RECAPS.length - 1];
+  const latestRecap = meta.lastRecap;
+  const springMeeting = banquet.data.springMeeting;
   const playerCount = roster.teams.reduce((n, t) => n + t.players.length, 0);
   const SUBS = roster.subs;
 
@@ -70,19 +79,30 @@ export default async function HomePage() {
           </div>
           <div className="rounded-2xl border border-white/10 bg-dusk-800/60 p-5 backdrop-blur">
             <p className="text-xs uppercase tracking-widest text-slate-400">
-              Next on the tee
+              {meta.complete ? "Season complete" : "Next on the tee"}
             </p>
-            <p className="mt-1 text-xl font-semibold text-white">{week.label}</p>
-            <p className="text-slate-300">{week.note ?? "League match play"}</p>
+            {meta.complete ? (
+              <>
+                <p className="mt-1 text-xl font-semibold text-white">That&apos;s a wrap</p>
+                <p className="text-slate-300">
+                  Banquet done · spring meeting {springMeeting}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="mt-1 text-xl font-semibold text-white">{week.label}</p>
+                <p className="text-slate-300">{week.note ?? "League match play"}</p>
+              </>
+            )}
           </div>
           <div className="rounded-2xl border border-white/10 bg-dusk-800/60 p-5 backdrop-blur">
             <p className="text-xs uppercase tracking-widest text-slate-400">
-              Standings as of
+              {meta.complete ? "Final standings" : "Standings as of"}
             </p>
-            <p className="mt-1 text-xl font-semibold text-white">
-              {LEAGUE.standingsAsOf}
+            <p className="mt-1 text-xl font-semibold text-white">{meta.asOf}</p>
+            <p className="text-slate-300">
+              {meta.complete ? `Final ${LEAGUE.season} results` : "Updated weekly"}
             </p>
-            <p className="text-slate-300">Updated weekly</p>
           </div>
         </div>
       </section>

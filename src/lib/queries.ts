@@ -7,7 +7,7 @@ import {
   type RankedTeam,
   type RankedPlayer,
 } from "@/lib/standings";
-import { TEAMS, SCHEDULE, type Player } from "@/data/league";
+import { LEAGUE, TEAMS, SCHEDULE, RECAPS, type Player } from "@/data/league";
 import { SEASON_2026 } from "@/data/season2026";
 import {
   BANQUET_2026,
@@ -159,11 +159,14 @@ export async function getIndividualStandings(): Promise<RankedPlayerH[]> {
 // ---------------------------------------------------------------------------
 
 async function handicapMap(sql: Sql): Promise<Map<number, number>> {
+  // Only real rounds count. A missed week is stored as strokes = 0, which is not
+  // a 9-hole score; including it would drag a golfer's average (and handicap)
+  // down to a bogus 0, so exclude non-positive strokes.
   const rows = await sql<{ player_id: number; strokes: number }[]>`
     select r.player_id, r.strokes
     from results r
     join weeks w on w.id = r.week_id
-    where r.strokes is not null
+    where r.strokes is not null and r.strokes > 0
     order by w.sort desc`;
   const recent = new Map<number, number[]>();
   for (const r of rows) {
@@ -177,6 +180,81 @@ async function handicapMap(sql: Sql): Promise<Map<number, number>> {
     out.set(pid, Math.max(0, Math.round(avg - 35)));
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// Season meta — the public "as of" date derived from the last week that has
+// scores, whether the season looks complete, and the most recent recap. This
+// replaces the hardcoded LEAGUE.standingsAsOf so the site rolls forward on its
+// own as nights are entered.
+// ---------------------------------------------------------------------------
+
+export type SeasonMeta = {
+  asOfISO: string | null;
+  /** Formatted last-scored date, e.g. "August 20, 2026". */
+  asOf: string;
+  /** No scheduled match-play week remains after the last scored week. */
+  complete: boolean;
+  lastRecap: {
+    label: string;
+    lowScores: string | null;
+    fiftyFifty: string | null;
+  } | null;
+};
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+function formatISODate(iso: string | null): string | null {
+  if (!iso) return null;
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return `${MONTHS[m - 1]} ${d}, ${y}`;
+}
+
+export async function getSeasonMeta(): Promise<SeasonMeta> {
+  noStore();
+  const fallbackRecap = RECAPS.length
+    ? {
+        label: RECAPS[RECAPS.length - 1].label,
+        lowScores: RECAPS[RECAPS.length - 1].lowScores ?? null,
+        fiftyFifty: RECAPS[RECAPS.length - 1].fiftyFifty ?? null,
+      }
+    : null;
+  const sql = getSql();
+  if (!sql) {
+    return { asOfISO: null, asOf: LEAGUE.standingsAsOf, complete: false, lastRecap: fallbackRecap };
+  }
+  try {
+    await ensureSchema();
+    const weeks = await sql<
+      { label: string; play_date: string | null; low_scores: string | null; fifty_fifty: string | null }[]
+    >`
+      select w.label, w.play_date::text as play_date, rc.low_scores, rc.fifty_fifty
+      from weeks w
+      left join recaps rc on rc.week_id = w.id
+      where exists (select 1 from results r where r.week_id = w.id)
+      order by w.sort desc`;
+    const last = weeks[0] ?? null;
+    const asOfISO = last?.play_date ?? null;
+    const recapRow =
+      weeks.find((w) => (w.low_scores && w.low_scores.trim()) || (w.fifty_fifty && w.fifty_fifty.trim())) ?? null;
+    const complete = asOfISO
+      ? !SCHEDULE.some((w) => (w.matchups?.length ?? 0) > 0 && w.date > asOfISO)
+      : false;
+    return {
+      asOfISO,
+      asOf: formatISODate(asOfISO) ?? LEAGUE.standingsAsOf,
+      complete,
+      lastRecap: recapRow
+        ? { label: recapRow.label, lowScores: recapRow.low_scores, fiftyFifty: recapRow.fifty_fifty }
+        : fallbackRecap,
+    };
+  } catch (e) {
+    console.error("getSeasonMeta failed:", e);
+    return { asOfISO: null, asOf: LEAGUE.standingsAsOf, complete: false, lastRecap: fallbackRecap };
+  }
 }
 
 export async function getHandicaps(): Promise<Map<number, number>> {
