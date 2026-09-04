@@ -1594,3 +1594,111 @@ export async function saveBanquet(data: BanquetData): Promise<void> {
             on conflict (season) do update
               set data = excluded.data, updated_at = now()`;
 }
+
+// ---------------------------------------------------------------------------
+// Draft board — ranks all rostered golfers to seed balanced teams for the next
+// season. Sort: scoring average (low), then handicap (low), then points per
+// week (high), then games played (high), then best single round (low). Anything
+// still tied is flagged, never silently alphabetized. Uses per-round rates so a
+// golfer who missed weeks is compared fairly. Read the current season's scores
+// before archiving, since the draft happens on last year's numbers.
+// ---------------------------------------------------------------------------
+
+export type DraftPlayer = {
+  playerId: number;
+  lastTeamId: number;
+  name: string;
+  games: number;
+  scoringAvg: number | null;
+  handicap: number | null;
+  pointsPerWeek: number | null;
+  bestRound: number | null;
+  rank: number;
+  ranked: boolean; // false = no prior scores, placed at the bottom for manual seeding
+  tiedWithPrev: boolean;
+  tiedWithNext: boolean;
+  draftTeam: number; // suggested serpentine team slot
+  draftRound: number;
+};
+
+export async function getDraftBoard(): Promise<{ players: DraftPlayer[]; numTeams: number }> {
+  noStore();
+  const roster = await getRoster();
+  const numTeams = roster.teams.length || 10;
+  const sql = getSql();
+  if (!sql) return { players: [], numTeams };
+  await ensureSchema();
+  const rows = await sql<
+    { player_id: number; games: number; scoring_avg: number | null; best_round: number | null; pts_total: number; pts_weeks: number }[]
+  >`
+    select r.player_id,
+      count(*) filter (where r.strokes > 0)::int as games,
+      avg(r.strokes) filter (where r.strokes > 0)::float8 as scoring_avg,
+      min(r.strokes) filter (where r.strokes > 0)::int as best_round,
+      coalesce(sum(r.points), 0)::float8 as pts_total,
+      count(*) filter (where r.points is not null)::int as pts_weeks
+    from results r group by r.player_id`;
+  const stat = new Map(rows.map((r) => [r.player_id, r]));
+  const hcp = await getHandicaps();
+
+  type Row = Omit<DraftPlayer, "rank" | "ranked" | "tiedWithPrev" | "tiedWithNext" | "draftTeam" | "draftRound">;
+  const flat: Row[] = roster.teams.flatMap((t) =>
+    t.players.map((p) => {
+      const s = stat.get(p.id);
+      const games = s ? s.games : 0;
+      const ptsWeeks = s ? s.pts_weeks : 0;
+      const round2 = (n: number) => Math.round(n * 100) / 100;
+      return {
+        playerId: p.id,
+        lastTeamId: t.id,
+        name: p.name,
+        games,
+        scoringAvg: s && s.scoring_avg != null ? round2(s.scoring_avg) : null,
+        handicap: hcp.get(p.id) ?? null,
+        pointsPerWeek: s && ptsWeeks > 0 ? round2(s.pts_total / ptsWeeks) : null,
+        bestRound: s && s.best_round != null ? s.best_round : null,
+      };
+    }),
+  );
+
+  const cmp = (a: Row, b: Row) => {
+    const av = a.scoringAvg ?? Infinity, bv = b.scoringAvg ?? Infinity;
+    if (av !== bv) return av - bv;
+    const ah = a.handicap ?? Infinity, bh = b.handicap ?? Infinity;
+    if (ah !== bh) return ah - bh;
+    const ap = a.pointsPerWeek ?? -Infinity, bp = b.pointsPerWeek ?? -Infinity;
+    if (ap !== bp) return bp - ap;
+    if (a.games !== b.games) return b.games - a.games;
+    const ab = a.bestRound ?? Infinity, bb = b.bestRound ?? Infinity;
+    if (ab !== bb) return ab - bb;
+    return 0;
+  };
+  const sameKey = (a: Row, b: Row) =>
+    a.scoringAvg === b.scoringAvg &&
+    a.handicap === b.handicap &&
+    a.pointsPerWeek === b.pointsPerWeek &&
+    a.games === b.games &&
+    a.bestRound === b.bestRound;
+
+  const ranked = flat.filter((p) => p.scoringAvg != null).sort(cmp);
+  const unranked = flat.filter((p) => p.scoringAvg == null);
+  const ordered = [...ranked, ...unranked];
+
+  return {
+    numTeams,
+    players: ordered.map((p, i) => {
+      const round = Math.floor(i / numTeams);
+      const pos = i % numTeams;
+      const isRanked = p.scoringAvg != null;
+      return {
+        ...p,
+        rank: i + 1,
+        ranked: isRanked,
+        tiedWithPrev: isRanked && i > 0 && ranked[i - 1] != null && sameKey(p, ordered[i - 1]),
+        tiedWithNext: isRanked && i < ranked.length - 1 && sameKey(p, ordered[i + 1]),
+        draftTeam: round % 2 === 0 ? pos + 1 : numTeams - pos, // serpentine
+        draftRound: round + 1,
+      };
+    }),
+  };
+}

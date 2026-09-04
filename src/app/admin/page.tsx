@@ -39,6 +39,7 @@ export default async function AdminDashboard() {
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {[
             { href: "/admin/roster", title: "Teams & roster", sub: "Players, subs, new season" },
+            { href: "/admin/draft", title: "Draft board", sub: "Rank golfers, seed teams" },
             { href: "/admin/schedule", title: "Schedule", sub: "Weeks, matchups, generator" },
             { href: "/admin/treasury", title: "Treasury", sub: "Dues, ledger, balance" },
             { href: "/admin/banquet", title: "Banquet", sub: "Year-end script & awards" },
