@@ -12,7 +12,7 @@ export const LEAGUE = {
   season: 2026,
   course: "Westhaven Golf Course",
   coursePhone: "920.233.4640",
-  playDay: "Wednesday",
+  playDay: "Thursday",
   teeTimes: "3:00 – 4:20 pm",
   standingsAsOf: "August 6, 2026",
   rosterAsOf: "August 6, 2026",
