@@ -31,12 +31,10 @@ export default async function DraftBoard() {
       <p className="mt-1 max-w-2xl text-sm text-ink2">
         All golfers ranked to seed balanced teams for next season. Order:{" "}
         <span className="text-ink">scoring average</span> (low) →{" "}
-        <span className="text-ink">handicap</span> (low) →{" "}
-        <span className="text-ink">points per week</span> (high) →{" "}
-        <span className="text-ink">games played</span> (high) →{" "}
-        <span className="text-ink">best round</span> (low). Rates are per-round, so a
-        golfer who missed weeks is compared fairly. Anything still tied is flagged for a
-        coin flip — never ordered by name.
+        <span className="text-ink">handicap</span> (low). Scoring average is stroke skill
+        and decides almost every seat; handicap (recent form) only splits an exact tie.
+        Points, games and best round are shown for context but don&apos;t affect the
+        order. Anything still tied is flagged for a coin flip — never ordered by name.
       </p>
       <div className="mt-3 rounded-lg border border-sunset-500/30 bg-sunset-500/5 px-4 py-2.5 text-xs text-ink2">
         Run this on last season&apos;s numbers <span className="font-semibold text-ink">before</span> you

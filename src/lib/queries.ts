@@ -1609,7 +1609,8 @@ export type DraftPlayer = {
   lastTeamId: number;
   name: string;
   games: number;
-  scoringAvg: number | null;
+  scoringAvg: number | null; // rounded for display (2 dp)
+  avgRaw: number | null; // full-precision average used to order/seed
   handicap: number | null;
   pointsPerWeek: number | null;
   bestRound: number | null;
@@ -1654,6 +1655,7 @@ export async function getDraftBoard(): Promise<{ players: DraftPlayer[]; numTeam
         name: p.name,
         games,
         scoringAvg: s && s.scoring_avg != null ? round2(s.scoring_avg) : null,
+        avgRaw: s && s.scoring_avg != null ? s.scoring_avg : null,
         handicap: hcp.get(p.id) ?? null,
         pointsPerWeek: s && ptsWeeks > 0 ? round2(s.pts_total / ptsWeeks) : null,
         bestRound: s && s.best_round != null ? s.best_round : null,
@@ -1661,24 +1663,20 @@ export async function getDraftBoard(): Promise<{ players: DraftPlayer[]; numTeam
     }),
   );
 
+  // Seed on stroke skill: full-precision scoring average (low), then handicap
+  // (recent form, low) as the only tiebreak. Points, games and best round are
+  // shown for context but no longer sort — average score already captures skill
+  // and, at full precision, decides all but a genuine dead heat. A remaining
+  // exact tie is flagged for a coin flip.
   const cmp = (a: Row, b: Row) => {
-    const av = a.scoringAvg ?? Infinity, bv = b.scoringAvg ?? Infinity;
+    const av = a.avgRaw ?? Infinity, bv = b.avgRaw ?? Infinity;
     if (av !== bv) return av - bv;
     const ah = a.handicap ?? Infinity, bh = b.handicap ?? Infinity;
     if (ah !== bh) return ah - bh;
-    const ap = a.pointsPerWeek ?? -Infinity, bp = b.pointsPerWeek ?? -Infinity;
-    if (ap !== bp) return bp - ap;
-    if (a.games !== b.games) return b.games - a.games;
-    const ab = a.bestRound ?? Infinity, bb = b.bestRound ?? Infinity;
-    if (ab !== bb) return ab - bb;
     return 0;
   };
   const sameKey = (a: Row, b: Row) =>
-    a.scoringAvg === b.scoringAvg &&
-    a.handicap === b.handicap &&
-    a.pointsPerWeek === b.pointsPerWeek &&
-    a.games === b.games &&
-    a.bestRound === b.bestRound;
+    a.avgRaw === b.avgRaw && a.handicap === b.handicap;
 
   const ranked = flat.filter((p) => p.scoringAvg != null).sort(cmp);
   const unranked = flat.filter((p) => p.scoringAvg == null);
