@@ -5,356 +5,146 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sunset Social Golf League — 2027 50/50</title>
 <style>
-  :root { --line:#000; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #fff; color: #000; }
   body {
     font-family: "Segoe UI", Arial, Helvetica, sans-serif;
-    font-size: 11pt;
-    line-height: 1.35;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    font-size: 11pt; line-height: 1.3;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
-  .sheet { padding: 0.35in; }
+  .sheet { padding: 0.32in; }
 
-  h1 { font-size: 17pt; margin: 0 0 2px; letter-spacing: .2px; }
-  h2 { font-size: 14pt; margin: 0 0 6px; }
-  .sub { font-size: 10.5pt; margin: 0 0 10px; }
-  .meta { display: flex; flex-wrap: wrap; gap: 26px; font-size: 10.5pt; margin: 0 0 8px; }
-  .meta .fill { display: inline-block; min-width: 240px; border-bottom: 1px solid #000; }
-  .meta .fill.short { min-width: 170px; }
+  h1 { font-size: 17pt; margin: 0; letter-spacing: .2px; }
+  .sub { font-size: 10pt; margin: 1px 0 7px; }
+  .meta { display: flex; gap: 30px; font-size: 12pt; margin: 0 0 7px; }
+  .meta .fill { display: inline-block; min-width: 210px; border-bottom: 1.2px solid #000; height: 1.05em; }
+  .meta .fill.short { min-width: 150px; }
 
-  .legend {
-    font-size: 8.8pt; margin: 6px 0 8px; padding: 5px 8px;
-    border: 1px solid #000; line-height: 1.5;
+  .key {
+    font-size: 9pt; line-height: 1.45; border: 1.2pt solid #000;
+    padding: 5px 8px; margin: 0 0 9px;
   }
-  .legend b { font-weight: 700; }
-  .legend .k { font-weight: 700; }
+  .key b { font-weight: 700; }
+  .key .mark { font-family: "Courier New", monospace; font-weight: 700; border: 1px solid #000; padding: 0 3px; }
 
-  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .cols { display: flex; gap: 16px; }
+  .cols > div { flex: 1; }
 
-  /* ---- checklist grid ---- */
-  table.grid th, table.grid td {
-    border: 0.75pt solid #000;
-    padding: 0;
-    text-align: center;
-    overflow: hidden;
+  table.grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  table.grid th, table.grid td { border: 0.75pt solid #000; }
+  table.grid thead th {
+    font-weight: 700; font-size: 9pt; text-align: center; padding: 4px 0;
+    border-bottom-width: 1.6pt;
   }
-  table.grid thead th { font-weight: 700; font-size: 8.5pt; }
-  table.grid thead .wkh { padding: 3px 0 2px; }
-  table.grid thead .wkd { height: 20px; } /* write the Thursday date here */
-  table.grid thead .corner { font-size: 9pt; vertical-align: middle; }
-  table.grid .num { font-size: 8pt; color: #000; height: 26px; }
+  table.grid thead .gname { text-align: left; padding-left: 6px; }
+  table.grid .num { text-align: center; font-size: 8.5pt; width: 9%; }
+  table.grid td.num { color: #000; }
   table.grid .gname {
-    text-align: left; padding: 0 5px; font-size: 10.5pt; font-weight: 600;
-    white-space: nowrap; border-right-width: 1.5pt;
+    text-align: left; padding: 0 6px; font-size: 10.5pt; font-weight: 600;
+    white-space: nowrap; overflow: hidden; border-right-width: 1.5pt;
   }
-  table.grid td.wk { height: 26px; }
-  table.grid td.tot { height: 26px; }
-  table.grid .tstart { border-left-width: 1.5pt; }
-  table.grid thead .tstart { border-left-width: 1.5pt; }
-  table.grid .gname.corner { border-right-width: 1.5pt; }
-  /* heavier rule every 5 golfers to track across 18 columns */
+  table.grid td { height: 27px; }
+  table.grid td.ent { }
   table.grid tbody tr:nth-child(5n) td { border-bottom-width: 1.6pt; }
-  thead { display: table-header-group; }
-  tr { page-break-inside: avoid; }
 
-  .date-note { font-size: 8.5pt; margin: 4px 0 0; }
+  .foot { margin-top: 9px; border: 1.4pt solid #000; padding: 7px 10px; font-size: 11pt; }
+  .foot .row { display: flex; flex-wrap: wrap; gap: 26px; align-items: baseline; }
+  .foot .fill { display: inline-block; min-width: 90px; border-bottom: 1.2px solid #000; height: 1.05em; }
+  .foot .note { font-size: 8.6pt; margin-top: 5px; font-style: italic; }
 
-  /* ---- weekly totals ---- */
-  .block { margin-top: 16px; }
-  table.wt th, table.wt td { border: 0.75pt solid #000; padding: 4px 6px; font-size: 9.5pt; text-align: center; height: 24px; }
-  table.wt th { font-weight: 700; font-size: 9pt; }
-  table.wt .wt-wk { width: 8%; font-weight: 700; }
-  table.wt .wt-date { width: 16%; }
-  table.wt col.c { width: 19%; }
-
-  /* ---- summary ---- */
-  table.sum th, table.sum td { border: 0.75pt solid #000; padding: 5px 6px; font-size: 10pt; height: 28px; }
-  table.sum th { font-weight: 700; font-size: 9.5pt; text-align: center; }
-  table.sum .num { width: 4%; text-align: center; font-size: 8.5pt; }
-  table.sum .gname { width: 30%; text-align: left; font-weight: 600; }
-  table.sum td { text-align: center; }
-  table.sum .qual .box {
-    display: inline-block; width: 14px; height: 14px; border: 1.2pt solid #000; vertical-align: middle;
-  }
-  table.sum tbody tr:nth-child(5n) td { border-bottom-width: 1.6pt; }
-
-  /* ---- instructions (one landscape page) ---- */
-  .instr { font-size: 11pt; line-height: 1.32; max-width: 9.2in; }
-  .instr h1 { font-size: 15pt; margin-bottom: 3px; }
-  .instr h3 { font-size: 11.5pt; margin: 9px 0 2px; }
-  .instr .why { font-style: italic; margin: 2px 0 6px; }
-  .instr .cols { column-count: 2; column-gap: 30px; }
-  .instr ul { margin: 2px 0 0; padding-left: 20px; break-inside: avoid; }
-  .instr li { margin: 3px 0; }
-  .instr h3, .instr .rulebox { break-inside: avoid; }
-  .instr .mark { font-family: "Courier New", monospace; font-weight: 700; border: 1px solid #000; padding: 0 3px; }
-  .instr .rulebox { border: 1.4pt solid #000; padding: 8px 12px; margin: 6px 0 8px; }
-
-  .page-break { page-break-before: always; break-before: page; }
-
-  @page { size: letter landscape; margin: 0.4in; }
-
-  @media print {
-    .sheet { padding: 0; }
-    .noprint { display: none !important; }
-  }
+  @page { size: letter portrait; margin: 0.4in; }
+  @media print { .sheet { padding: 0; } .noprint { display: none !important; } }
   @media screen {
     body { background: #f4f4f4; }
-    .sheet { background: #fff; max-width: 1500px; margin: 12px auto; box-shadow: 0 1px 6px rgba(0,0,0,.15); }
-    .screenhint { font-size: 10pt; color: #444; text-align: center; margin: 8px auto; max-width: 1000px; }
+    .sheet { background: #fff; max-width: 850px; margin: 12px auto; box-shadow: 0 1px 6px rgba(0,0,0,.15); }
+    .screenhint { font-size: 10pt; color: #444; text-align: center; margin: 8px auto; }
   }
 </style>
 </head>
 <body>
 
-<p class="screenhint noprint">Print on Letter, <b>landscape</b>. Everything is black &amp; white and sized to fit 18 week columns. File: <code>ssgl-2027-5050-checklist.html</code></p>
+<p class="screenhint noprint">One page &middot; Letter <b>portrait</b> &middot; black &amp; white. Print a fresh sheet each Thursday.</p>
 
-<!-- ============ PAGE 1+: CHECKLIST GRID ============ -->
 <section class="sheet">
   <h1>Sunset Social Golf League &mdash; 2027 50/50</h1>
-  <p class="sub">Weekly 50/50 participation tracker &middot; Thursday 9-hole league &middot; Westhaven Golf Course</p>
+  <p class="sub">Weekly 50/50 sign-in &middot; Thursday 9-hole league &middot; Westhaven Golf Course &middot; one sheet per night</p>
+
   <div class="meta">
-    <span>Season / date range: <span class="fill"></span></span>
+    <span>Thursday date: <span class="fill"></span></span>
     <span>Secretary: <span class="fill short"></span></span>
   </div>
 
-  <div class="legend">
-    <span class="k">How to mark a cell:</span>
-    &nbsp; <b>5</b> = dollars that golfer put in (write the amount every week)
-    &nbsp;&middot;&nbsp; <b>10 / 15</b> = extra tickets, write the real dollars
-    &nbsp;&middot;&nbsp; <b>5+ML</b> = joint ticket (your&nbsp;$ + partner&rsquo;s initials, on <i>each</i> partner&rsquo;s row)
-    &nbsp;&middot;&nbsp; <b>blank</b> = did not buy (blank is not a zero)
-    &nbsp;&middot;&nbsp; <b>/</b> = absent from golf
-    &nbsp;&middot;&nbsp; <b>&#9711; or W</b> = won that week (does not change $ In)
-    <br>
-    <span class="k">Right-side totals (fill anytime):</span>
-    &nbsp; <b>Nights</b> = weeks with any entry &nbsp;&middot;&nbsp;
-    <b>$ In</b> = add up the dollars &nbsp;&middot;&nbsp;
-    <b>Shared</b> = count of nights with a &ldquo;+&rdquo; joint ticket.
-    &nbsp; A joint ticket still counts as a <i>full night</i> for each name; $ In is only that person&rsquo;s share, never the whole pot.
-  </div>
-
-  <table class="grid">
-    <colgroup><col style="width:3.2%"><col style="width:14%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:3.6%"><col style="width:6.2%"><col style="width:6.2%"><col style="width:5.4%"></colgroup>
-    <thead>
-      <tr>
-        <th class="corner" rowspan="2">#</th>
-        <th class="corner gname" rowspan="2" style="text-align:left;padding-left:5px;">Golfer</th>
-        <th class="wkh">1</th><th class="wkh">2</th><th class="wkh">3</th><th class="wkh">4</th><th class="wkh">5</th><th class="wkh">6</th><th class="wkh">7</th><th class="wkh">8</th><th class="wkh">9</th><th class="wkh">10</th><th class="wkh">11</th><th class="wkh">12</th><th class="wkh">13</th><th class="wkh">14</th><th class="wkh">15</th><th class="wkh">16</th><th class="wkh">17</th><th class="wkh">18</th>
-        <th class="tstart" rowspan="2">Nights</th>
-        <th rowspan="2">$ In</th>
-        <th rowspan="2">Shared</th>
-      </tr>
-      <tr>
-        <th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th><th class="wkd"></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td class="num">1</td><td class="gname">Armock, Dick</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">2</td><td class="gname">Asuma, Tom</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">3</td><td class="gname">Bathke, Duane</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">4</td><td class="gname">Clark, Gary</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">5</td><td class="gname">Dewing, Kevin</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">6</td><td class="gname">Ehnert, Troy</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">7</td><td class="gname">Erikson, George</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">8</td><td class="gname">Foster, Anthony</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">9</td><td class="gname">Gesell, Andrew</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">10</td><td class="gname">Hanusa, Dick</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">11</td><td class="gname">Johnson, Scott</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">12</td><td class="gname">Kuenzl, Ken</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">13</td><td class="gname">LeMaire, Andy</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">14</td><td class="gname">Levine, Phil</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">15</td><td class="gname">Levine, Rich</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">16</td><td class="gname">Lloyd, Alan</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">17</td><td class="gname">Lloyd, Mike</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">18</td><td class="gname">Lloyd, Mike D.</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">19</td><td class="gname">Marschall, Dan</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">20</td><td class="gname">Murphy, John</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">21</td><td class="gname">O’Brien, Jack</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">22</td><td class="gname">Payne, Dennis</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">23</td><td class="gname">Pitz, Ben</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">24</td><td class="gname">Popp, John</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">25</td><td class="gname">Riese, Mike</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">26</td><td class="gname">Robinson, Brian</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">27</td><td class="gname">Scanlan, Jeff</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">28</td><td class="gname">Scanlan, Steve</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">29</td><td class="gname">Schneider, Dan</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">30</td><td class="gname">Schroeder, Terry</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">31</td><td class="gname">Schultz, Brad</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">32</td><td class="gname">Schutz, Dave</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">33</td><td class="gname">Smith, Bill</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">34</td><td class="gname">Sobojinski, Justin</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">35</td><td class="gname">Sobojinski, Mike</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">36</td><td class="gname">Stieg, Jeff</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">37</td><td class="gname">Stueber, Bob</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">38</td><td class="gname">Stueber, Jerry</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">39</td><td class="gname">Stueber, Peter</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">40</td><td class="gname">Yenter, Al</td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">41</td><td class="gname"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">42</td><td class="gname"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">43</td><td class="gname"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">44</td><td class="gname"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">45</td><td class="gname"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-<tr><td class="num">46</td><td class="gname"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="wk"></td><td class="tot tstart"></td><td class="tot"></td><td class="tot"></td></tr>
-    </tbody>
-  </table>
-  <p class="date-note">Top number row = week #. Write each <b>Thursday date</b> in the blank row beneath it. Bottom 6 rows are for new members or subs.</p>
-
-  <!-- ---- weekly totals ---- -->
-  <div class="block">
-    <h2>Weekly totals</h2>
-    <table class="wt">
-      <colgroup><col class="wt-wk"><col class="wt-date"><col class="c"><col class="c"><col class="c"><col class="c"></colgroup>
-      <thead>
-        <tr>
-          <th>Wk</th><th>Thursday date</th><th>Buyers this week</th>
-          <th>$ collected this week</th><th>Running $ (year)</th><th>Running nights (year)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td class="wt-wk">1</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">2</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">3</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">4</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">5</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">6</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">7</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">8</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">9</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">10</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">11</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">12</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">13</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">14</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">15</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">16</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">17</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="wt-wk">18</td><td class="wt-date"></td><td></td><td></td><td></td><td></td></tr>
-        <tr><td colspan="2" style="text-align:right;font-weight:700;">SEASON TOTAL &rarr;</td><td></td><td></td><td></td><td></td></tr>
-      </tbody>
-    </table>
-    <p class="date-note">&ldquo;$ collected this week&rdquo; is the whole pot and should be about <b>2&times;</b> what you deposit as the league half (the winner already got the other half in cash). Do <b>not</b> record the payout or the deposit here &mdash; those live in the treasurer register.</p>
-  </div>
-</section>
-
-<!-- ============ INSTRUCTIONS PAGE ============ -->
-<section class="sheet instr page-break">
-  <h1>50/50 checklist &mdash; how to fill it out</h1>
-  <p class="why">Purpose: we&rsquo;re counting who takes part in the 50/50 through the 2027 season so we can build fair participation incentives for 2028. This sheet is only a tally &mdash; it never touches the money that goes in the treasurer&rsquo;s register.</p>
-
-  <div class="rulebox">
-    <b>The one rule that matters:</b> in a golfer&rsquo;s cell, write the <b>dollars that person actually put in</b> that week. Blank means they did not buy. That&rsquo;s it &mdash; everything below is just the details.
+  <div class="key">
+    <b>In a golfer&rsquo;s box, write the dollars they put in</b> &mdash; <span class="mark">5</span>, <span class="mark">10</span>, <span class="mark">15</span>&hellip;
+    &nbsp;&middot;&nbsp; <b>Joint ticket:</b> write your&nbsp;$ + partner&rsquo;s initials in <i>each</i> box, e.g. <span class="mark">5+ML</span> / <span class="mark">5+AL</span> (never the whole pot on both) &mdash; still a full night for each name.
+    &nbsp;&middot;&nbsp; <b>blank</b> = didn&rsquo;t buy &nbsp;&middot;&nbsp; <b><span class="mark">/</span></b> = absent from golf &nbsp;&middot;&nbsp; <b>circle the box or <span class="mark">W</span></b> = winner (cash paid tonight; does not change their $).
   </div>
 
   <div class="cols">
-  <h3>Solo buy-in</h3>
-  <ul>
-    <li><b>Standard amount:</b> write the dollar amount in that week&rsquo;s cell &mdash; e.g. <span class="mark">5</span>. (Even if it&rsquo;s always the same, writing the number every week is best; a tick alone works only if you note the $ whenever it changes.)</li>
-    <li><b>Extra tickets:</b> write the real dollars &mdash; <span class="mark">10</span>, <span class="mark">15</span>, and so on.</li>
-  </ul>
-
-  <h3>Joint / group buy-in (a pair or group sharing one ticket or one win)</h3>
-  <ul>
-    <li>On <b>each</b> partner&rsquo;s row, write the dollars <b>that person</b> put in, then a small <b>+</b> and the partner&rsquo;s initials &mdash; e.g. <span class="mark">5+ML</span> on Alan Lloyd&rsquo;s row and <span class="mark">5+AL</span> on Mike Lloyd&rsquo;s row.</li>
-    <li><b>Never put the whole pot on both rows.</b> Each row shows only that golfer&rsquo;s share.</li>
-    <li>A joint ticket still counts as a <b>full night</b> for every name on it. It just doesn&rsquo;t double the dollars.</li>
-  </ul>
-
-  <h3>Other marks</h3>
-  <ul>
-    <li><b>Did not play the 50/50:</b> leave the cell <b>blank</b> &mdash; blank means &ldquo;no,&rdquo; not zero.</li>
-    <li><b>Absent from golf that week:</b> optional slash <span class="mark">/</span> through the cell, so a blank there isn&rsquo;t read as &ldquo;chose not to buy.&rdquo;</li>
-    <li><b>Winner that week:</b> circle the cell or add a <span class="mark">W</span>. This does <b>not</b> change their $ In &mdash; the win is cash paid that night.</li>
-  </ul>
-
-  <h3>The three totals on the right</h3>
-  <ul>
-    <li><b>Nights</b> &mdash; count the weeks with any entry (solo or joint).</li>
-    <li><b>$ In</b> &mdash; add up the dollars you wrote across the row.</li>
-    <li><b>Shared</b> &mdash; count the nights with a &ldquo;+&rdquo; (on a joint ticket).</li>
-  </ul>
-
-  <h3>Weekly totals row</h3>
-  <ul>
-    <li><b>Buyers this week</b> &mdash; how many golfers bought in (count the joint players individually).</li>
-    <li><b>$ collected this week</b> &mdash; the whole pot; roughly <b>2&times;</b> the league-half deposit.</li>
-    <li><b>Running</b> columns &mdash; add each week onto the last so you can see the year climb.</li>
-  </ul>
-
-  <h3>Do not record here</h3>
-  <ul>
-    <li>The winner&rsquo;s payout and the league-half deposit stay in the <b>treasurer register</b>, not on this sheet.</li>
-  </ul>
+    <div><table class="grid">
+    <colgroup><col style="width:9%"><col style="width:58%"><col style="width:33%"></colgroup>
+    <thead><tr><th class="num">#</th><th class="gname">Golfer</th><th>50/50 &mdash; $ in</th></tr></thead>
+    <tbody><tr><td class="num">1</td><td class="gname">Armock, Dick</td><td class="ent"></td></tr>
+<tr><td class="num">2</td><td class="gname">Asuma, Tom</td><td class="ent"></td></tr>
+<tr><td class="num">3</td><td class="gname">Bathke, Duane</td><td class="ent"></td></tr>
+<tr><td class="num">4</td><td class="gname">Clark, Gary</td><td class="ent"></td></tr>
+<tr><td class="num">5</td><td class="gname">Dewing, Kevin</td><td class="ent"></td></tr>
+<tr><td class="num">6</td><td class="gname">Ehnert, Troy</td><td class="ent"></td></tr>
+<tr><td class="num">7</td><td class="gname">Erikson, George</td><td class="ent"></td></tr>
+<tr><td class="num">8</td><td class="gname">Foster, Anthony</td><td class="ent"></td></tr>
+<tr><td class="num">9</td><td class="gname">Gesell, Andrew</td><td class="ent"></td></tr>
+<tr><td class="num">10</td><td class="gname">Hanusa, Dick</td><td class="ent"></td></tr>
+<tr><td class="num">11</td><td class="gname">Johnson, Scott</td><td class="ent"></td></tr>
+<tr><td class="num">12</td><td class="gname">Kuenzl, Ken</td><td class="ent"></td></tr>
+<tr><td class="num">13</td><td class="gname">LeMaire, Andy</td><td class="ent"></td></tr>
+<tr><td class="num">14</td><td class="gname">Levine, Phil</td><td class="ent"></td></tr>
+<tr><td class="num">15</td><td class="gname">Levine, Rich</td><td class="ent"></td></tr>
+<tr><td class="num">16</td><td class="gname">Lloyd, Alan</td><td class="ent"></td></tr>
+<tr><td class="num">17</td><td class="gname">Lloyd, Mike</td><td class="ent"></td></tr>
+<tr><td class="num">18</td><td class="gname">Lloyd, Mike D.</td><td class="ent"></td></tr>
+<tr><td class="num">19</td><td class="gname">Marschall, Dan</td><td class="ent"></td></tr>
+<tr><td class="num">20</td><td class="gname">Murphy, John</td><td class="ent"></td></tr>
+<tr><td class="num">21</td><td class="gname">O’Brien, Jack</td><td class="ent"></td></tr>
+<tr><td class="num">22</td><td class="gname">Payne, Dennis</td><td class="ent"></td></tr>
+<tr><td class="num">23</td><td class="gname">Pitz, Ben</td><td class="ent"></td></tr></tbody>
+  </table></div>
+    <div><table class="grid">
+    <colgroup><col style="width:9%"><col style="width:58%"><col style="width:33%"></colgroup>
+    <thead><tr><th class="num">#</th><th class="gname">Golfer</th><th>50/50 &mdash; $ in</th></tr></thead>
+    <tbody><tr><td class="num">24</td><td class="gname">Popp, John</td><td class="ent"></td></tr>
+<tr><td class="num">25</td><td class="gname">Riese, Mike</td><td class="ent"></td></tr>
+<tr><td class="num">26</td><td class="gname">Robinson, Brian</td><td class="ent"></td></tr>
+<tr><td class="num">27</td><td class="gname">Scanlan, Jeff</td><td class="ent"></td></tr>
+<tr><td class="num">28</td><td class="gname">Scanlan, Steve</td><td class="ent"></td></tr>
+<tr><td class="num">29</td><td class="gname">Schneider, Dan</td><td class="ent"></td></tr>
+<tr><td class="num">30</td><td class="gname">Schroeder, Terry</td><td class="ent"></td></tr>
+<tr><td class="num">31</td><td class="gname">Schultz, Brad</td><td class="ent"></td></tr>
+<tr><td class="num">32</td><td class="gname">Schutz, Dave</td><td class="ent"></td></tr>
+<tr><td class="num">33</td><td class="gname">Smith, Bill</td><td class="ent"></td></tr>
+<tr><td class="num">34</td><td class="gname">Sobojinski, Justin</td><td class="ent"></td></tr>
+<tr><td class="num">35</td><td class="gname">Sobojinski, Mike</td><td class="ent"></td></tr>
+<tr><td class="num">36</td><td class="gname">Stieg, Jeff</td><td class="ent"></td></tr>
+<tr><td class="num">37</td><td class="gname">Stueber, Bob</td><td class="ent"></td></tr>
+<tr><td class="num">38</td><td class="gname">Stueber, Jerry</td><td class="ent"></td></tr>
+<tr><td class="num">39</td><td class="gname">Stueber, Peter</td><td class="ent"></td></tr>
+<tr><td class="num">40</td><td class="gname">Yenter, Al</td><td class="ent"></td></tr>
+<tr><td class="num">41</td><td class="gname"></td><td class="ent"></td></tr>
+<tr><td class="num">42</td><td class="gname"></td><td class="ent"></td></tr>
+<tr><td class="num">43</td><td class="gname"></td><td class="ent"></td></tr>
+<tr><td class="num">44</td><td class="gname"></td><td class="ent"></td></tr>
+<tr><td class="num">45</td><td class="gname"></td><td class="ent"></td></tr>
+<tr><td class="num">46</td><td class="gname"></td><td class="ent"></td></tr></tbody>
+  </table></div>
   </div>
-</section>
 
-<!-- ============ END-OF-SEASON SUMMARY ============ -->
-<section class="sheet page-break">
-  <h1>2027 season summary</h1>
-  <p class="sub">Fill in after week 18 &mdash; totals from the checklist, plus a spot to flag who qualifies for a 2028 incentive.</p>
-  <div class="meta">
-    <span>Completed by: <span class="fill short"></span></span>
-    <span>Date: <span class="fill short"></span></span>
-    <span>Incentive rule used: <span class="fill"></span></span>
+  <div class="foot">
+    <div class="row">
+      <span><b>Buyers tonight:</b> <span class="fill"></span></span>
+      <span><b>Pot collected $:</b> <span class="fill"></span></span>
+      <span style="font-size:9pt;">(pot &asymp; <b>2&times;</b> the league-half deposit)</span>
+    </div>
+    <p class="note">Record the winner&rsquo;s payout and the league-half deposit in the treasurer register, not here. At season&rsquo;s end, tally each golfer&rsquo;s nights &amp; dollars from the stack of sheets.</p>
   </div>
-  <table class="sum">
-    <colgroup><col style="width:4%"><col style="width:30%"><col style="width:16%"><col style="width:16%"><col style="width:18%"><col style="width:16%"></colgroup>
-    <thead>
-      <tr>
-        <th class="num">#</th><th class="gname">Golfer</th><th>Nights</th><th>$ In</th><th>Shared nights</th><th>Qualifies</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td class="num">1</td><td class="gname">Armock, Dick</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">2</td><td class="gname">Asuma, Tom</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">3</td><td class="gname">Bathke, Duane</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">4</td><td class="gname">Clark, Gary</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">5</td><td class="gname">Dewing, Kevin</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">6</td><td class="gname">Ehnert, Troy</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">7</td><td class="gname">Erikson, George</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">8</td><td class="gname">Foster, Anthony</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">9</td><td class="gname">Gesell, Andrew</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">10</td><td class="gname">Hanusa, Dick</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">11</td><td class="gname">Johnson, Scott</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">12</td><td class="gname">Kuenzl, Ken</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">13</td><td class="gname">LeMaire, Andy</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">14</td><td class="gname">Levine, Phil</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">15</td><td class="gname">Levine, Rich</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">16</td><td class="gname">Lloyd, Alan</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">17</td><td class="gname">Lloyd, Mike</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">18</td><td class="gname">Lloyd, Mike D.</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">19</td><td class="gname">Marschall, Dan</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">20</td><td class="gname">Murphy, John</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">21</td><td class="gname">O’Brien, Jack</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">22</td><td class="gname">Payne, Dennis</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">23</td><td class="gname">Pitz, Ben</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">24</td><td class="gname">Popp, John</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">25</td><td class="gname">Riese, Mike</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">26</td><td class="gname">Robinson, Brian</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">27</td><td class="gname">Scanlan, Jeff</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">28</td><td class="gname">Scanlan, Steve</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">29</td><td class="gname">Schneider, Dan</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">30</td><td class="gname">Schroeder, Terry</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">31</td><td class="gname">Schultz, Brad</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">32</td><td class="gname">Schutz, Dave</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">33</td><td class="gname">Smith, Bill</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">34</td><td class="gname">Sobojinski, Justin</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">35</td><td class="gname">Sobojinski, Mike</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">36</td><td class="gname">Stieg, Jeff</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">37</td><td class="gname">Stueber, Bob</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">38</td><td class="gname">Stueber, Jerry</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">39</td><td class="gname">Stueber, Peter</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">40</td><td class="gname">Yenter, Al</td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">41</td><td class="gname"></td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">42</td><td class="gname"></td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">43</td><td class="gname"></td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">44</td><td class="gname"></td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">45</td><td class="gname"></td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-<tr><td class="num">46</td><td class="gname"></td><td></td><td></td><td></td><td class="qual"><span class="box"></span></td></tr>
-    </tbody>
-  </table>
 </section>
 
 </body>
